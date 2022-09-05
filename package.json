@@ -1,12 +1,11 @@
 {
-  "name": "forge-template",
-  "author": "FrankieIsLost",
+  "name": "napier-v0",
+  "author": "massun-onibakuchi",
   "version": "1.0.0",
-  "description": "A forge template",
-  "homepage": "https://github.com/FrankieIsLost/forge-template#readme",
+  "description": "Napier",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FrankieIsLost/forge-template.git"
+    "url": "git+https://github.com/massun-onibakuchi/napier.git"
   },
   "scripts": {
     "prettier": "prettier --write 'src/**/*.sol'",
@@ -16,7 +15,6 @@
     "solhint:check": "solhint --config ./.solhint.json 'src/**/*.sol'",
     "lint": "npm run prettier && npm run solhint",
     "lint:check": "npm run prettier:check && npm run solhint:check"
-    
   },
   "devDependencies": {
     "prettier": "^2.5.1",

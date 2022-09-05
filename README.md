@@ -1,25 +1,37 @@
-# Nomad-bridge Exploit PoC
-
-This is just a simple poc of the attack. built for educational purposes.
+# Napier
 
 ## Requirements
 
 - [Foundry](https://book.getfoundry.sh/)
 
-## Run
+## Setup
 
-Set enviroment variables.
+You need access to an archive node like the free ones from [Alchemy](https://alchemyapi.io/). Create `.env` file and paste the RPC url.
 
-```
-export RPC_URL=<Your RRC URL>
-```
+Type:
 
-Then type:
-
-```
-forge test -vvv --fork-url=$RPC_URL --fork-block-number=15259594
+```bash
+cp .env.example .env
 ```
 
-## Disclaimer
+Then set the environment variable.
 
-![Disclaimer](./picture.png)
+```
+RPC_URL=<mainnet RRC URL>
+```
+
+## Compiling
+
+Type:
+
+```
+forge build
+```
+
+## Testing
+
+Type:
+
+```
+forge test -vvv --fork-url=$RPC_URL --fork-block-number=<block number>
+```

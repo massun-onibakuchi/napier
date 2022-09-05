@@ -2,8 +2,11 @@
 pragma solidity 0.8.10;
 
 // External references
-import {SafeERC20, ERC20} from "solmate/erc20/SafeERC20.sol";
-import {FixedMath} from "../../utils/FixedMath.sol";
+import {ERC20} from "solmate/tokens/ERC20.sol";
+import {SafeTransferLib as SafeERC20} from "solmate/utils/SafeTransferLib.sol";
+
+// Internal references
+import "../BaseAdapter.sol";
 
 interface IWETH {
     function deposit() external payable;
@@ -48,6 +51,8 @@ contract CompoundAdapter is BaseAdapter {
     using SafeERC20 for ERC20;
 
     address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+
+    constructor(AdapterParams memory _adapterParams) BaseAdapter(_adapterParams) {}
 
     function _scale() internal override returns (uint256) {
         uint256 decimals = CTokenInterface(underlying()).decimals();
@@ -103,5 +108,5 @@ contract CompoundAdapter is BaseAdapter {
         return keccak256(abi.encodePacked(ERC20(target).symbol())) == keccak256(abi.encodePacked("cETH"));
     }
 
-    fallback() external payable {}
+    receive() external payable {}
 }

@@ -2,11 +2,17 @@
 via_ir = false
 out = 'out'
 libs = ["lib"]
-remappings = [
-    'forge-std=lib/forge-std/src/',
-    'solmate=lib/solmate/src/',
-]
+remappings = ['forge-std=lib/forge-std/src/', 'solmate=lib/solmate/src/']
 optimizer_runs = 200
 
+# verbosity=0
+# Level 2 (-vv): Logs emitted during tests are also displayed.
+# Level 3 (-vvv): Stack traces for failing tests are also displayed.
+# Level 4 (-vvvv): Stack traces for all tests are displayed, and setup traces for failing tests are displayed.
+# Level 5 (-vvvvv): Stack traces and setup traces are always displayed.
 [profile.optimized]
 solc = '0.8.6'
+
+[rpc_endpoints]
+# reference to an environment variable RPC_URL
+mainnet = "${RPC_URL}"

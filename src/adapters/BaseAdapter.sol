@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.8.10;
 
-import {SafeERC20, ERC20} from "solmate/erc20/SafeERC20.sol";
-import {FixedMath} from "../../utils/FixedMath.sol";
+import {ERC20} from "solmate/tokens/ERC20.sol";
+import {SafeTransferLib as SafeERC20} from "solmate/utils/SafeTransferLib.sol";
+import {FixedMath} from "../utils/FixedMath.sol";
+import {Errors} from "../utils/Errors.sol";
 
 abstract contract BaseAdapter {
     using FixedMath for uint256;
@@ -12,7 +14,8 @@ abstract contract BaseAdapter {
 
     struct AdapterParams {
         address underlying; //
-        address target; // Target token
+        address target;
+        // Target token
         uint256 delta; // max growth per second allowed
         uint256 minm; // min maturity (seconds after block.timstamp)
         uint256 maxm; // max maturity (seconds after block.timstamp)
@@ -32,8 +35,6 @@ abstract contract BaseAdapter {
 
         name = string(abi.encodePacked(ERC20(_adapterParams.target).name(), " Adapter"));
         symbol = string(abi.encodePacked(ERC20(_adapterParams.target).symbol(), "-adapter"));
-
-        ERC20(_adapterParams.target).safeApprove(divider, type(uint256).max);
     }
 
     /// @notice Calculate and return this adapter's Scale value for the current timestamp
@@ -52,7 +53,9 @@ abstract contract BaseAdapter {
                 10**ERC20(adapterParams.target).decimals()
             );
 
-            if (growthPerSec > adapterParams.delta) revert(Errors.InvalidScaleValue);
+            if (growthPerSec > adapterParams.delta) {
+                revert(Errors.InvalidScaleValue);
+            }
         }
 
         if (_value != lvalue) {

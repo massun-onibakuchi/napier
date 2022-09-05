@@ -62,7 +62,9 @@ library DateTime {
 
     /// Taken from https://stackoverflow.com/questions/47129173/how-to-convert-uint-to-string-in-solidity
     function uintToString(uint256 _i) internal pure returns (string memory _uintAsString) {
-        if (_i == 0) return "0";
+        if (_i == 0) {
+            return "0";
+        }
         uint256 j = _i;
         uint256 len;
         while (j != 0) {

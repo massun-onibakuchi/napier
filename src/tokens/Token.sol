@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.10;
 
-// External references
-import {ERC20} from "solmate/tokens/ERC20.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+import "../interfaces/IToken.sol";
 
 /// @title Base Token
-contract Token is ERC20 {
+contract Token is IToken, ERC20 {
+    uint8 private immutable DECIMALS;
+
     uint256 public immutable BASE_UNIT;
+
     address public immutable tranche;
 
     constructor(
@@ -14,9 +18,14 @@ contract Token is ERC20 {
         string memory _symbol,
         uint8 _decimals,
         address _tranche
-    ) ERC20(_name, _symbol, _decimals) {
+    ) ERC20(_name, _symbol) {
+        DECIMALS = _decimals;
         BASE_UNIT = 10**_decimals;
         tranche = _tranche;
+    }
+
+    function decimals() public view override(ERC20, IERC20Metadata) returns (uint8) {
+        return DECIMALS;
     }
 
     /// @param account The address to send the minted tokens

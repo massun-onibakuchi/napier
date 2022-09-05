@@ -11,7 +11,7 @@ optimizer_runs = 200
 # Level 4 (-vvvv): Stack traces for all tests are displayed, and setup traces for failing tests are displayed.
 # Level 5 (-vvvvv): Stack traces and setup traces are always displayed.
 [profile.optimized]
-solc = '0.8.6'
+solc = '0.8.10'
 
 [rpc_endpoints]
 # reference to an environment variable RPC_URL

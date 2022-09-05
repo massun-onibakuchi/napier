@@ -2,6 +2,5 @@
 pragma solidity 0.8.10;
 
 // External references
-import {ERC20} from "solmate/tokens/ERC20.sol";
-import {SafeTransferLib as SafeERC20} from "solmate/utils/SafeTransferLib.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {FixedMath} from "../../utils/FixedMath.sol";

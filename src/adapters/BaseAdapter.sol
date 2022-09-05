@@ -1,21 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+// Modified from https://github.com/sense-finance/sense-v1/blob/6cd5dac6b31731499a65d8fb4d94894ac7f04c96/pkg/core/src/adapters/BaseAdapter.sol
 pragma solidity 0.8.10;
 
-import {ERC20} from "solmate/tokens/ERC20.sol";
-import {SafeTransferLib as SafeERC20} from "solmate/utils/SafeTransferLib.sol";
+import {IERC20Metadata, IERC20} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 import {FixedMath} from "../utils/FixedMath.sol";
 import {Errors} from "../utils/Errors.sol";
 
 abstract contract BaseAdapter {
     using FixedMath for uint256;
-    using SafeERC20 for ERC20;
+    using SafeERC20 for IERC20Metadata;
 
     AdapterParams public adapterParams;
 
     struct AdapterParams {
-        address underlying; //
-        address target;
-        // Target token
+        address underlying; // underlying token
+        address target; // Target token
         uint256 delta; // max growth per second allowed
         uint256 minm; // min maturity (seconds after block.timstamp)
         uint256 maxm; // max maturity (seconds after block.timstamp)
@@ -33,8 +34,8 @@ abstract contract BaseAdapter {
     constructor(AdapterParams memory _adapterParams) {
         adapterParams = _adapterParams;
 
-        name = string(abi.encodePacked(ERC20(_adapterParams.target).name(), " Adapter"));
-        symbol = string(abi.encodePacked(ERC20(_adapterParams.target).symbol(), "-adapter"));
+        name = string(abi.encodePacked(IERC20Metadata(_adapterParams.target).name(), " Adapter"));
+        symbol = string(abi.encodePacked(IERC20Metadata(_adapterParams.target).symbol(), "-adapter"));
     }
 
     /// @notice Calculate and return this adapter's Scale value for the current timestamp
@@ -50,7 +51,7 @@ abstract contract BaseAdapter {
             // check actual growth vs delta (max growth per sec)
             uint256 growthPerSec = (_value > lvalue ? _value - lvalue : lvalue - _value).fdiv(
                 lvalue * elapsed,
-                10**ERC20(adapterParams.target).decimals()
+                10**IERC20Metadata(adapterParams.target).decimals()
             );
 
             if (growthPerSec > adapterParams.delta) {

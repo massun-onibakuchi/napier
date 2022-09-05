@@ -2,8 +2,7 @@
 pragma solidity 0.8.10;
 
 // External references
-import {ERC20} from "solmate/tokens/ERC20.sol";
-import {SafeTransferLib as SafeERC20} from "solmate/utils/SafeTransferLib.sol";
+import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 // Internal references
 import "../BaseAdapter.sol";
@@ -48,7 +47,7 @@ interface CETHTokenInterface {
 /// @notice Adapter contract for cTokens
 contract CompoundAdapter is BaseAdapter {
     using FixedMath for uint256;
-    using SafeERC20 for ERC20;
+    using SafeERC20 for IERC20;
 
     address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
@@ -65,8 +64,8 @@ contract CompoundAdapter is BaseAdapter {
     }
 
     function wrapUnderlying(uint256 uBal) external override returns (uint256) {
-        // ERC20 u = ERC20(underlying());
-        // ERC20 target = ERC20(adapterParams.target);
+        // IERC20 u = IERC20(underlying());
+        // IERC20 target = IERC20(adapterParams.target);
         // bool isCETH = _isCETH(address(adapterParams.target));
         // u.safeTransferFrom(msg.sender, address(this), uBal); // pull underlying
         // if (isCETH) IWETH(WETH).withdraw(uBal); // unwrap WETH into ETH
@@ -80,14 +79,14 @@ contract CompoundAdapter is BaseAdapter {
         // uint256 tBalAfter = target.balanceOf(address(this));
         // uint256 tBal = tBalAfter - tBalBefore;
         // // transfer target to sender
-        // ERC20(target).safeTransfer(msg.sender, tBal);
+        // IERC20(target).safeTransfer(msg.sender, tBal);
         // return tBal;
     }
 
     function unwrapTarget(uint256 tBal) external override returns (uint256) {
-        // ERC20 u = ERC20(underlying());
+        // IERC20 u = IERC20(underlying());
         // bool isCETH = _isCETH(address(adapterParams.target));
-        // ERC20 target = ERC20(adapterParams.target);
+        // IERC20 target = IERC20(adapterParams.target);
         // target.safeTransferFrom(msg.sender, address(this), tBal); // pull target
         // // redeem target for underlying
         // uint256 uBalBefore = isCETH ? address(this).balance : u.balanceOf(address(this));
@@ -105,7 +104,7 @@ contract CompoundAdapter is BaseAdapter {
     }
 
     function _isCETH(address target) internal view returns (bool) {
-        return keccak256(abi.encodePacked(ERC20(target).symbol())) == keccak256(abi.encodePacked("cETH"));
+        return keccak256(abi.encodePacked(IERC20Metadata(target).symbol())) == keccak256(abi.encodePacked("cETH"));
     }
 
     receive() external payable {}

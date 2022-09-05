@@ -9,7 +9,7 @@ import "../interfaces/IToken.sol";
 contract Token is IToken, ERC20 {
     uint8 private immutable DECIMALS;
 
-    uint256 public immutable BASE_UNIT;
+    uint256 private immutable BASE_UNIT;
 
     address public immutable tranche;
 

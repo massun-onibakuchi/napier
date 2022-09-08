@@ -6,4 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../interfaces/INapierPT.sol";
 
 // Maybe unused
-abstract contract NapierPT is ERC20("Napier PT", "nPT"), INapierPT {}
+abstract contract NapierPT is ERC20("Napier PT", "nPT"), INapierPT {
+
+}

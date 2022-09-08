@@ -48,45 +48,42 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     /// @notice pt -> user -> lscale (last scale)
     mapping(address => mapping(uint256 => mapping(address => uint256))) public lscales;
 
-    struct InitParams {
-        BaseAdapter adapter; // Adapter
-        uint128 tilt; // % of underlying principal initially reserved for Claims
-    }
-
     // TODO: token name and symbol
     // TODO: deploy tranche with CREATE2 from factory, init with callback instead of constructor
     // ref: Element finance and Uniswap V3
     constructor(
-        InitParams[] memory _params,
+        BaseAdapter[] memory adapters,
         address _underlying,
         uint256 _maturity,
         address _sponsor,
         INapierPoolFactory _poolFactory
     ) ERC20("Napier Principal Token", "nPT") {
+        require(block.timestamp < _maturity, "Tranche: maturity in the past");
+
         issuance = block.timestamp;
         maturity = _maturity;
         sponsor = _sponsor;
         underlying = IERC20(_underlying);
         poolFactory = _poolFactory;
 
-        uint256 len = _params.length;
+        uint256 len = adapters.length;
         for (uint256 i = 0; i < len; ) {
-            require(_underlying == _params[i].adapter.underlying(), "Tranche: underlying mismatch");
+            require(_underlying == adapters[i].underlying(), "Tranche: underlying mismatch");
 
             uint8 uDecimals = IERC20Metadata(_underlying).decimals();
 
             address zero = address(new Token("Zero", "ZERO", uDecimals, address(this)));
             address claim = address(new Token("Claim", "CLAIM", uDecimals, address(this)));
-            uint256 iscale = _params[i].adapter.scale();
+            uint256 iscale = adapters[i].scale();
 
             series[zero] = Series({
                 claim: claim,
-                adapter: _params[i].adapter,
+                adapter: adapters[i],
                 reward: 0,
                 iscale: iscale,
                 mscale: 0,
                 maxscale: iscale,
-                tilt: _params[i].tilt
+                tilt: adapters[i].tilt()
             });
             unchecked {
                 i++;
@@ -97,14 +94,14 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     /// @dev only registered pools can mint
     /// @param account The address to send the minted tokens
     /// @param amount The amount to be minted
-    function mintNapierPT(address account, uint256 amount) external onlyPool {
+    function mintNapierPT(address account, uint256 amount) external onlyPool notMatured {
         _mint(account, amount);
     }
 
     /// @dev only registered pools can burn
     /// @param account The address from where to burn tokens from
     /// @param amount The amount to be burned
-    function burnNapierPT(address account, uint256 amount) external onlyPool {
+    function burnNapierPT(address account, uint256 amount) external onlyPool notMatured {
         _burn(account, amount);
     }
 
@@ -114,19 +111,19 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     /// @param pt principal token address
     /// @param tAmount amount of Target to deposit
     /// @dev The balance of Zeros/Claims minted will be the same value in units of underlying (less fees)
-    function issue(address pt, uint256 tAmount) external nonReentrant returns (uint256 uAmount) {}
+    function issue(address pt, uint256 tAmount) external nonReentrant notMatured returns (uint256 uAmount) {}
 
     /// @notice Reconstitute Target by burning Zeros and Claims
     /// @dev Explicitly burns claims before maturity, and implicitly does it at/after maturity through `_collect()`
     /// @param pt principal token address
     /// @param uAmount Balance of Zeros and Claims to burn
-    function combine(address pt, uint256 uAmount) external nonReentrant returns (uint256 tAmount) {}
+    function combine(address pt, uint256 uAmount) external nonReentrant notMatured returns (uint256 tAmount) {}
 
     /// @notice Burn Zeros of a Series once its been settled
     /// @dev The balance of redeemable Target is a function of the change in Scale
     /// @param pt principal token address
     /// @param uAmount Amount of Zeros to burn, which should be equivelent to the amount of Underlying owed to the caller
-    function redeemZero(address pt, uint256 uAmount) external nonReentrant returns (uint256 tBal) {}
+    function redeemZero(address pt, uint256 uAmount) external nonReentrant matured returns (uint256 tBal) {}
 
     function collect(
         address usr,
@@ -154,7 +151,16 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     ) internal returns (uint256 collected) {}
 
     modifier onlyPool() {
-        require(poolFactory.isPool(msg.sender), "Tranche: only pool");
+        require(poolFactory.isRegisteredPool(msg.sender), "Tranche: only pool");
+        _;
+    }
+
+    modifier notMatured() {
+        require(block.timestamp < maturity, "Tranche: before maturity");
+        _;
+    }
+    modifier matured() {
+        require(block.timestamp >= maturity, "Tranche: after maturity");
         _;
     }
 }

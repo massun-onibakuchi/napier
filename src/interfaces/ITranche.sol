@@ -3,7 +3,14 @@ pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+/// @title Napier Principal Token interface
 interface ITranche {
+    event SeriesInitialized(address indexed nPT, uint256 indexed maturity, address indexed sponsor);
+
+    event Issued(address pt, uint256 balance, address indexed sender);
+    event Combined(address pt, uint256 balance, address indexed sender);
+    event Collected(address pt, uint256 collected);
+
     function maturity() external returns (uint256);
 
     function issuance() external returns (uint256);

@@ -13,7 +13,7 @@ contract TrancheFactory {
 
     function createTranche(
         address _underlying,
-        Tranche.InitParams[] memory _params,
+        BaseAdapter[] memory adapters,
         uint256 _maturity
     ) external returns (ITranche tranche) {
         // TODO

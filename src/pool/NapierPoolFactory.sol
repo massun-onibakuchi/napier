@@ -9,4 +9,8 @@ contract NapierPoolFactory is INapierPoolFactory {
     function createPool(address underlying, address nPT) external returns (address) {
         // TODO
     }
+
+    function isRegisteredPool(address pool) external view returns (bool) {
+        return _isPoolRegistered[pool];
+    }
 }

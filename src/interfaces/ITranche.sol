@@ -1,7 +1,27 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.10;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 interface ITranche {
+    function maturity() external returns (uint256);
+
+    function issuance() external returns (uint256);
+
+    function underlying() external returns (IERC20);
+
+    /// @notice mint NapierPT
+    /// @dev only registered pools can mint
+    /// @param account The address to send the minted tokens
+    /// @param amount The amount to be minted
+    function mintNapierPT(address account, uint256 amount) external;
+
+    /// @notice burn NapierPT
+    /// @dev only registered pools can burn
+    /// @param account The address from where to burn tokens from
+    /// @param amount The amount to be burned
+    function burnNapierPT(address account, uint256 amount) external;
+
     function scale() external;
 
     /// @notice Mint Zeros and Claims of a specific protocol

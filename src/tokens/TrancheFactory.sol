@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.10;
 
-// import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol.sol";
+// import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
+import {BaseAdapter as Adapter} from "../adapters/BaseAdapter.sol";
 import "./Tranche.sol";
 
 contract TrancheFactory {
@@ -13,7 +14,7 @@ contract TrancheFactory {
 
     function createTranche(
         address _underlying,
-        BaseAdapter[] memory adapters,
+        Adapter[] memory adapters,
         uint256 _maturity
     ) external returns (ITranche tranche) {
         // TODO

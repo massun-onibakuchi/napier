@@ -20,6 +20,7 @@ abstract contract BaseAdapter {
         uint256 delta; // max growth per second allowed
         uint256 minm; // min maturity (seconds after block.timstamp)
         uint256 maxm; // max maturity (seconds after block.timstamp)
+        uint256 issuanceFee; // issuance fee (in WAD)
     }
 
     string public name;
@@ -86,11 +87,18 @@ abstract contract BaseAdapter {
     function wrapUnderlying(uint256 amount) external virtual returns (uint256);
 
     /// @notice Deposits target `amount`in return for underlying. Must be overriden by child contracts
+    /// @dev no funds should be left in the contract after this call
     /// @param amount Target amount
     /// @return amount of underlying returned
     function unwrapTarget(uint256 amount) external virtual returns (uint256);
 
     /* ========== ACCESSORS ========== */
 
+    /// @notice Returns the interest-bearing token address
     function getTarget() external view returns (address) {}
+
+    /// @notice Returns issuance fee rate (in WAD)
+    function getIssuanceFee() external view returns (uint256) {
+        return adapterParams.issuanceFee;
+    }
 }

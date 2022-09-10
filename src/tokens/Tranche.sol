@@ -39,19 +39,8 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
 
     INapierPoolFactory public immutable poolFactory;
 
-    struct Series {
-        // address zero; // Zero ERC20 token
-        address claim; // Claim ERC20 token
-        Adapter adapter; // Adapter
-        uint256 reward; // tracks fees due to the series' settler
-        uint256 iscale; // scale at issuance
-        uint256 mscale; // scale at maturity
-        uint256 maxscale; // max scale value from this series' lifetime
-        uint128 tilt; // % of underlying principal initially reserved for Claims
-    }
-
     /// @notice pt -> Series
-    mapping(address => Series) public series;
+    mapping(address => Series) internal series;
 
     /// @notice pt -> user -> lscale (last scale)
     mapping(address => mapping(address => uint256)) public lscales;
@@ -189,7 +178,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         uint256 uAmountTransfer,
         address to
     ) external nonReentrant returns (uint256 collected) {
-        uint256 uBal = Claim(msg.sender).balanceOf(usr);
+        uint256 uBal = Claim(series[pt].claim).balanceOf(usr);
         return _collect(usr, pt, uBal, uAmountTransfer > 0 ? uAmountTransfer : uBal, to);
     }
 
@@ -207,6 +196,10 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         uint256 uAmountTransfer,
         address to
     ) internal returns (uint256 collected) {}
+
+    function getSeries(address pt) external view returns (Series memory) {
+        return series[pt];
+    }
 
     modifier onlyPool() {
         require(poolFactory.isRegisteredPool(msg.sender), "Tranche: only pool");

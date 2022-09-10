@@ -10,6 +10,10 @@ Napier Finance is a fully decentralized yield stripping protocol that enables us
 The specificity of Napier Finance is that it processes multiple principal tokens (that has same underlying asset, same maturity, different with yield sources) as a single principal token. 
 You don't to use Aave, Compound, Yearn and other AMM separatly to diversify your strategies. You can use Napier Finance and save gas fees and benefit from different yield strategies in a single transaction. 
 
+With Unified liquidity Napier Finance will bring significant capital efficiency improvements to existing YieldSpaces.
+
+
+
 ![PoPV](./docs/Processing.png)
 
 ## Requirements 

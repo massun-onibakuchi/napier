@@ -131,46 +131,36 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
         // Disambiguate reserves wrt token type
         // (uint8 _zeroi, uint8 _targeti) = getIndices();
         // (uint256 zeroReserves, uint256 targetReserves) = (reserves[_zeroi], reserves[_targeti]);
-
         // uint256[] memory amountsIn = new uint256[](2);
-
         // // If the pool has been initialized, but there aren't yet any Zeros in it
         // if (zeroReserves == 0) {
         //     uint256 reqTargetIn = reqAmountsIn[_targeti];
         //     // Mint LP shares according to the relative amount of Target being offered
         //     uint256 bptToMint = (totalSupply() * reqTargetIn) / targetReserves;
-
         //     // Pull the entire offered Target
         //     amountsIn[_targeti] = reqTargetIn;
-
         //     return (bptToMint, amountsIn);
         // } else {
         //     // Disambiguate requested amounts wrt token type
         //     (uint256 reqZerosIn, uint256 reqTargetIn) = (reqAmountsIn[_zeroi], reqAmountsIn[_targeti]);
         //     // Caclulate the percentage of the pool we'd get if we pulled all of the requested Target in
         //     uint256 pctTarget = reqTargetIn.divDown(targetReserves);
-
         //     // Caclulate the percentage of the pool we'd get if we pulled all of the requested Zeros in
         //     uint256 pctZeros = reqZerosIn.divDown(zeroReserves);
-
         //     // Determine which amountIn is our limiting factor
         //     if (pctTarget < pctZeros) {
         //         // If it's Target, pull the entire requested Target amountIn,
         //         // and pull Zeros in at the percetage of the requested Target / Target reserves
         //         uint256 bptToMint = totalSupply().mulDown(pctTarget);
-
         //         amountsIn[_zeroi] = zeroReserves.mulDown(pctTarget);
         //         amountsIn[_targeti] = reqTargetIn;
-
         //         return (bptToMint, amountsIn);
         //     } else {
         //         // If it's Zeros, pull the entire requested Zero amountIn,
         //         // and pull Target in at the percetage of the requested Zeros / Zero reserves
         //         uint256 bptToMint = totalSupply().mulDown(pctZeros);
-
         //         amountsIn[_zeroi] = reqZerosIn;
         //         amountsIn[_targeti] = targetReserves.mulDown(pctZeros);
-
         //         return (bptToMint, amountsIn);
         //     }
         // }

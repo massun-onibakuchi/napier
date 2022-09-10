@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # Napier Finance 
+=======
+## Napier Finance                 
+>>>>>>> 0e9c33a (feat: add docs)
 
 NOTE: This code is not audited and should not be used in production environment.
 This is the official repository for MEV Hackathon 2022 with Encode Club

@@ -1,7 +1,5 @@
 # Napier Finance 
 
-## Napier Finance                 
-
 NOTE: This code is not audited and should not be used in production environment.
 This is the official repository for MEV Hackathon 2022 with Encode Club
 
@@ -9,7 +7,7 @@ This is the official repository for MEV Hackathon 2022 with Encode Club
 
 Napier Finance is a fully decentralized yield stripping protocol that enables users to trade fixed and variable rates efficiently. Napier is building the Napier Space AMM, the most capital efficient AMM featuring permissionless listings and unified liquidity. Napier Finance opens up new options for DeFi yields without the need for trusted intermediaries.
 
-The specificity of Napier Finance is that is that it processes multiple principal tokens (that has same underlying asset, same maturity, different with yield sources) as a single principal token. 
+The specificity of Napier Finance is that it processes multiple principal tokens (that has same underlying asset, same maturity, different with yield sources) as a single principal token. 
 You don't to use Aave, Compound, Yearn and other AMM separatly to diversify your strategies. You can use Napier Finance and save gas fees and benefit from different yield strategies in a single transaction. 
 
 ![PoPV](./docs/Processing.png)
@@ -32,42 +30,43 @@ The existence of PT and YT allows users to safely earn and borrow at fixed rates
 ![PoPV](./docs/YieldStripping.png)
 
 
-
-
 ### Contracts 
 
  
-
-
-
-### Inspiration 
-
-To reduce the risk of having a sandwich attack AMM DEXs began offering Time Weighted Average Price (TWAP) oracles. TWAP is a pricing methodology that calculates the mean price of an asset during a specified period of time. For example, a “one-hour TWAP” means taking the average price over a defined hour of time. 
-
-
-Cross-exchange market making :
-
-- Less liquid market : make order 
-- More Liquid market : taker order 
-
-
-### Strategy 
-
-It is important to choose the right dex or in other words the route to be profitable, and for this you have to : 
-
-- Take into account the tax(fees) in the arbitrage while setting up orders. 
-- Oracle exchange price feed choice : not necessarily the connected exchange <depends on strategy : more liquid exchange will give you more insight into the potential direction of token price> 
-
-
-### Documentation 
+## Documentation 
 
 [Napier Finance](https://kita71yusuke.gitbook.io/napier-finance/)
 
 
-### MEV Integration 
+## Napier Finance & MEV 
 
-### Advantages 
+## Problem 
 
-### Future 
+“Liquidity” is one of the most important factors in the financial world. This is the same for DeFi. More attractive profit opportunities attract more liquidity. This is why Napier Finance tackles liquidity provider profitability issues.
+
+## Solution 
+
+ Napier's unique AMM design allows liquidity providers to be expected higher transaction fee revenue compared to traditional yield stripping applications by providing multiple advatanges : 
+
+ Non-liquidation - Napier can be likened to a secondary market for interest rates. Also, the two Napier minted tokens (PT and YT) are fully backed by the underlying asset and the interest accrued from it. As such, there is no risk of default or liquidation.
+
+ Interest Rate Elasticity - As a yield stripping app, Napier does not have its own lending market. As such, the yield is based on the interest rate elasticity of DeFi's existing variable-yield source protocol, giving you the flexibility to customize and create fixed-rate products based on it.
+
+ This second advantages will let traders make arbitrage based on their customized fixed-rate products by using Napier Finance multiple choices thanks to it's elasticity.
+
+ You can for example choose to use :
+    [Aave + Compound] as choice 1 
+    [Aave + Compound + Yearn ] as choice 2 
+
+Based on these 2 choices, LPs will mint 2 different PT and YT for the same underlying asset , DAI for example :
+
+    choice 1  : nPT and YT 
+    choice 2  : nPT and YT 
+
+For each option you will have a different YT and you can based on your strategy apply a profitable arbitrage if possible. 
+
+
+
+
 
 

@@ -6,10 +6,11 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../interfaces/IToken.sol";
 
 /// @title Base Token
+// TODO: this contract can be deployed with minimal proxy
 contract Token is IToken, ERC20 {
-    uint8 private immutable DECIMALS;
+    uint8 private immutable _DECIMALS;
 
-    uint256 private immutable BASE_UNIT;
+    uint256 private immutable _BASE_UNIT;
 
     address public immutable tranche;
 
@@ -19,13 +20,13 @@ contract Token is IToken, ERC20 {
         uint8 _decimals,
         address _tranche
     ) ERC20(_name, _symbol) {
-        DECIMALS = _decimals;
-        BASE_UNIT = 10**_decimals;
+        _DECIMALS = _decimals;
+        _BASE_UNIT = 10**_decimals;
         tranche = _tranche;
     }
 
     function decimals() public view override(ERC20, IERC20Metadata) returns (uint8) {
-        return DECIMALS;
+        return _DECIMALS;
     }
 
     /// @param account The address to send the minted tokens

@@ -23,6 +23,7 @@ abstract contract BaseAdapter {
         uint256 issuanceFee; // issuance fee (in WAD)
     }
 
+    /// Program state --------
     string public name;
     string public symbol;
     LScale public _lscale;
@@ -68,6 +69,8 @@ abstract contract BaseAdapter {
 
         return _value;
     }
+
+    
 
     /// @notice Scale getter that must be overriden by child contracts
     function _scale() internal virtual returns (uint256);

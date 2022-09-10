@@ -12,6 +12,12 @@ You don't to use Aave, Compound, Yearn and other AMM separatly to diversify your
 
 ![PoPV](./docs/Processing.png)
 
+## Requirements 
+
+[Foundry](https://book.getfoundry.sh/)
+
+- Compiling : ``` forge build ```
+- Testing :  ``` forge test -vvv --fork-url=$RPC_URL --fork-block-number=<block number> ``` 
 
 ## Napier Space AMM
 
@@ -33,7 +39,7 @@ The existence of PT and YT allows users to safely earn and borrow at fixed rates
 ## Contracts 
 
  
-## Documentation 
+## Useful Ressources 
 
 [Napier Finance](https://kita71yusuke.gitbook.io/napier-finance/)
 

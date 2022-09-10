@@ -30,7 +30,7 @@ The existence of PT and YT allows users to safely earn and borrow at fixed rates
 ![PoPV](./docs/YieldStripping.png)
 
 
-### Contracts 
+## Contracts 
 
  
 ## Documentation 
@@ -38,7 +38,7 @@ The existence of PT and YT allows users to safely earn and borrow at fixed rates
 [Napier Finance](https://kita71yusuke.gitbook.io/napier-finance/)
 
 
-## Napier Finance & MEV 
+# Arbitrage with Napier 
 
 ## Problem 
 

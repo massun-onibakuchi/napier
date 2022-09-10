@@ -32,17 +32,7 @@ The existence of PT and YT allows users to safely earn and borrow at fixed rates
 
 ### Contracts 
 
-AdaptersContractsAave deployed : [Mumbai  contract](https://mumbai.polygonscan.com/address/0x5bEa99Fcdca784bB9EbBF7a070FEB567a55581D5)
-
-
-### How it works : Proof of Price Variation 
-
-
-ADD DIAGRAM
-
  
-### Arbitrage Strategies  
-
 
 
 
@@ -67,18 +57,13 @@ It is important to choose the right dex or in other words the route to be profit
 
 ### Documentation 
 
-[Analysis tool for dexs](https://kita71yusuke.gitbook.io/napier-finance/)
+[Napier Finance](https://kita71yusuke.gitbook.io/napier-finance/)
 
 
 ### MEV Integration 
 
-- PriceFeed 
-- Keepers 
-
 ### Advantages 
-
 
 ### Future 
 
-- Friendly user-interface. 
-- 
+

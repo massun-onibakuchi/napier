@@ -9,7 +9,11 @@ This is the official repository for MEV Hackathon 2022 with Encode Club
 
 Napier Finance is a fully decentralized yield stripping protocol that enables users to trade fixed and variable rates efficiently. Napier is building the Napier Space AMM, the most capital efficient AMM featuring permissionless listings and unified liquidity. Napier Finance opens up new options for DeFi yields without the need for trusted intermediaries.
 
-We are tackling the problem of Yield Space. 
+The specificity of Napier Finance is that is that it processes multiple principal tokens (that has same underlying asset, same maturity, different with yield sources) as a single principal token. 
+You don't to use Aave, Compound, Yearn and other AMM separatly to diversify your strategies. You can use Napier Finance and save gas fees and benefit from different yield strategies in a single transaction. 
+
+![PoPV](./docs/Processing.png)
+
 
 ## Napier Space AMM
 

@@ -1,37 +1,67 @@
-# Napier
+## Botminator                 
 
-## Requirements
+🪢🪢 This is the official repository for MEV Hackathon 2022 with Encode Club 🪢🪢
 
-- [Foundry](https://book.getfoundry.sh/)
 
-## Setup
+## Description 
 
-You need access to an archive node like the free ones from [Alchemy](https://alchemyapi.io/). Create `.env` file and paste the RPC url.
+Napier Finance is a fully decentralized yield stripping protocol that enables users to trade fixed and variable rates efficiently. Napier is building the Napier Space AMM, the most capital efficient AMM featuring permissionless listings and unified liquidity. Napier Finance opens up new options for DeFi yields without the need for trusted intermediaries.
 
-Type:
 
-```bash
-cp .env.example .env
-```
+## Napier Space AMM
 
-Then set the environment variable.
+![PoPV](./docs/NapierSpace.png)
 
-```
-RPC_URL=<mainnet RRC URL>
-```
 
-## Compiling
+### Contracts 
 
-Type:
+AdaptersContractsAave deployed : [Mumbai  contract](https://mumbai.polygonscan.com/address/0x5bEa99Fcdca784bB9EbBF7a070FEB567a55581D5)
 
-```
-forge build
-```
 
-## Testing
+### How it works : Proof of Price Variation 
 
-Type:
 
-```
-forge test -vvv --fork-url=$RPC_URL --fork-block-number=<block number>
-```
+ADD DIAGRAM
+
+ 
+### Arbitrage Strategies  
+
+
+
+
+### Inspiration 
+
+To reduce the risk of having a sandwich attack AMM DEXs began offering Time Weighted Average Price (TWAP) oracles. TWAP is a pricing methodology that calculates the mean price of an asset during a specified period of time. For example, a “one-hour TWAP” means taking the average price over a defined hour of time. 
+
+
+Cross-exchange market making :
+
+- Less liquid market : make order 
+- More Liquid market : taker order 
+
+
+### Strategy 
+
+It is important to choose the right dex or in other words the route to be profitable, and for this you have to : 
+
+- Take into account the tax(fees) in the arbitrage while setting up orders. 
+- Oracle exchange price feed choice : not necessarily the connected exchange <depends on strategy : more liquid exchange will give you more insight into the potential direction of token price> 
+
+
+### Analysis Tools 
+
+[Analysis tool for dexs](https://defillama.com/)
+
+
+### MEV Integration 
+
+- PriceFeed 
+- Keepers 
+
+### Advantages 
+
+
+### Future 
+
+- Friendly user-interface. 
+- 

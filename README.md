@@ -44,12 +44,6 @@ The existence of PT and YT allows users to safely earn and borrow at fixed rates
 -  Napier Principal Token interface : nPT 
 
 
-
-
-
-
-
-
 - Adapters :
 
 Adapters hold the logic for stripping yield from yield-bearing assets. 
@@ -64,9 +58,6 @@ unwrapTarget()
 ```
 
 ![PoPV](./docs/Adapter1.png)
-
-
-
 
 
 ## Useful Ressources
@@ -97,9 +88,11 @@ Based on these 2 choices, LPs will mint 2 different PT and YT for the same under
 
 For each option you will have a different YT and you can based on your strategy apply a profitable arbitrage if possible. 
 
-![PoPV](./docs/Tradable.png)
+![PoPV](./docs/Final.png)
 
 
 Futur plans : 
+
+
 
 

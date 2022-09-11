@@ -57,7 +57,7 @@ unwrapTarget()
 
 ```
 
-![PoPV](./docs/Adapter1.png)
+![PoPV](./docs/FF.png)
 
 
 ## Useful Ressources
@@ -67,11 +67,10 @@ unwrapTarget()
 
 # Arbitrage with Napier 
 
-## Problem 
 
 “Liquidity” is one of the most important factors in the financial world. This is the same for DeFi. More attractive profit opportunities attract more liquidity. This is why Napier Finance tackles liquidity provider profitability issues.
 
-## Solution 
+ 
 
  Napier's unique AMM design allows liquidity providers to be expected higher transaction fee revenue compared to traditional yield stripping applications by providing multiple advatanges : 
 

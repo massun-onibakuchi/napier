@@ -46,10 +46,12 @@ Adapters :
 Adapters hold the logic for stripping yield from yield-bearing assets. 
 For the adapters Napier is using non-airdrop Adapter implementations that must inherit BaseAdapter  and override these functions : 
 
-```scale()
+```
+scale()
 getUnderlyingPrice()
 wrapUnderlying()
 unwrapTarget()
+
 ```
 
 ![PoPV](./docs/Adapter1.png)

@@ -41,7 +41,16 @@ The existence of PT and YT allows users to safely earn and borrow at fixed rates
 
 ## Contracts 
 
-Adapters :
+-  Napier Principal Token interface : nPT 
+
+
+
+
+
+
+
+
+- Adapters :
 
 Adapters hold the logic for stripping yield from yield-bearing assets. 
 For the adapters Napier is using non-airdrop Adapter implementations that must inherit BaseAdapter  and override these functions : 
@@ -55,6 +64,10 @@ unwrapTarget()
 ```
 
 ![PoPV](./docs/Adapter1.png)
+
+
+
+
 
 ## Useful Ressources
 

@@ -54,10 +54,6 @@ The existence of PT and YT allows users to safely earn and borrow at fixed rates
 
  Napier's unique AMM design allows liquidity providers to be expected higher transaction fee revenue compared to traditional yield stripping applications by providing multiple advatanges : 
 
- Non-liquidation - Napier can be likened to a secondary market for interest rates. Also, the two Napier minted tokens (PT and YT) are fully backed by the underlying asset and the interest accrued from it. As such, there is no risk of default or liquidation.
-
- Interest Rate Elasticity - As a yield stripping app, Napier does not have its own lending market. As such, the yield is based on the interest rate elasticity of DeFi's existing variable-yield source protocol, giving you the flexibility to customize and create fixed-rate products based on it.
-
  This second advantages will let traders make arbitrage based on their customized fixed-rate products by using Napier Finance multiple choices thanks to it's elasticity.
 
  You can for example choose to use :

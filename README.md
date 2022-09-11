@@ -70,7 +70,7 @@ unwrapTarget()
 
 “Liquidity” is one of the most important factors in the financial world. This is the same for DeFi. More attractive profit opportunities attract more liquidity. This is why Napier Finance tackles liquidity provider profitability issues.
 
- 
+
 
  Napier's unique AMM design allows liquidity providers to be expected higher transaction fee revenue compared to traditional yield stripping applications by providing multiple advatanges : 
 
@@ -87,10 +87,8 @@ Based on these 2 choices, LPs will mint 2 different PT and YT for the same under
 
 For each option you will have a different YT and you can based on your strategy apply a profitable arbitrage if possible. 
 
-![PoPV](./docs/Final.png)
 
-
-Futur plans : 
+## Futur plans 
 
 
 

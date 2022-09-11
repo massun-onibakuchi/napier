@@ -41,8 +41,6 @@ The existence of PT and YT allows users to safely earn and borrow at fixed rates
 
 ## Contracts 
 
--  Napier Principal Token interface : nPT 
-
 
 - Adapters :
 
@@ -87,7 +85,7 @@ In terms of security, security is not the most important part, but gas is, since
 more opportunities for our users to have the best yield and save gas. 
 
 
-# Futur plans 
+## Futur plans 
 
 - JIT || TWAMM are future plan to avoid price manipulation
 

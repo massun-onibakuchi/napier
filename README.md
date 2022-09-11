@@ -1,7 +1,7 @@
 # Napier Finance 
 
 NOTE: This code is not audited and should not be used in production environment.
-This is the official repository for MEV Hackathon 2022 with Encode Club
+The repository is under continuous development. 
 
 ## Summary  
 
@@ -11,7 +11,6 @@ The specificity of Napier Finance is that it processes multiple principal tokens
 You don't to use Aave, Compound, Yearn and other AMM separatly to diversify your strategies. You can use Napier Finance and save gas fees and benefit from different yield strategies in a single transaction. 
 
 With Unified liquidity Napier Finance will bring significant capital efficiency improvements to existing YieldSpaces.
-
 
 
 ![PoPV](./docs/Processing.png)
@@ -42,8 +41,19 @@ The existence of PT and YT allows users to safely earn and borrow at fixed rates
 
 ## Contracts 
 
- 
-## Useful Ressources 
+Adapters :
+
+Adapters hold the logic for stripping yield from yield-bearing assets. 
+For the adapters Napier is using non-airdrop Adapter implementations that must inherit BaseAdapter  and override these functions : 
+
+```scale()
+getUnderlyingPrice()
+wrapUnderlying()
+unwrapTarget()
+```
+![PoPV](./docs/Adapter1.png)
+
+## Useful Ressources
 
 [Napier Finance](https://kita71yusuke.gitbook.io/napier-finance/)
 
@@ -72,7 +82,8 @@ Based on these 2 choices, LPs will mint 2 different PT and YT for the same under
 For each option you will have a different YT and you can based on your strategy apply a profitable arbitrage if possible. 
 
 
+Futur plans : 
 
-
-
+- Just-in-time liquidity to prevent from sandwich attacks
+- 
 

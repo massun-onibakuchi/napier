@@ -78,8 +78,6 @@ Napier Finance smart contract is what you will call sending only one transaction
 
 ![nPT](./docs/nPT.png)
 
-
-
 ## Solidity 
 
 We are using mev assembly code for CREATE2 function and we are keeping developing our functions and smart contracts to save the more 
@@ -88,34 +86,9 @@ possible gas.
 In terms of security, security is not the most important part, but gas is, since this is an mev hackathon and our goal is to provide
 more opportunities for our users to have the best yield and save gas. 
 
-## Latency Minimization 
 
+# Futur plans 
 
-
-
-
-
-
-
-
- Napier's unique AMM design allows liquidity providers to be expected higher transaction fee revenue compared to traditional yield stripping applications by providing multiple advatanges : 
-
- This second advantages will let traders make arbitrage based on their customized fixed-rate products by using Napier Finance multiple choices thanks to it's elasticity.
-
- You can for example choose to use :
-    [Aave + Compound] as choice 1 
-    [Aave + Compound + Yearn ] as choice 2 
-
-Based on these 2 choices, LPs will mint 2 different PT and YT for the same underlying asset , DAI for example :
-
-    choice 1  : nPT and YT 
-    choice 2  : nPT and YT 
-
-For each option you will have a different YT and you can based on your strategy apply a profitable arbitrage if possible. 
-
-
-## Futur plans 
-
-
+- JIT || TWAMM are future plan to avoid price manipulation
 
 

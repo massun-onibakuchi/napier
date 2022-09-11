@@ -97,9 +97,9 @@ Based on these 2 choices, LPs will mint 2 different PT and YT for the same under
 
 For each option you will have a different YT and you can based on your strategy apply a profitable arbitrage if possible. 
 
+![PoPV](./docs/Tradable.png)
+
 
 Futur plans : 
 
-- Just-in-time liquidity to prevent from sandwich attacks
-- 
 

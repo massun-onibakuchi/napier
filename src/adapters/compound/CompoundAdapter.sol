@@ -50,6 +50,10 @@ contract CompoundAdapter is BaseAdapter {
     using SafeERC20 for IERC20;
 
     address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address public constant CETH = 0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5;
+
+    // bool public immutable isCETH;
+
 
     constructor(AdapterParams memory _adapterParams) BaseAdapter(_adapterParams) {}
 
@@ -59,28 +63,28 @@ contract CompoundAdapter is BaseAdapter {
     }
 
     function underlying() public view override returns (address) {
-        // address target = adapterParams.target;
-        // return _isCETH(target) ? WETH : CTokenInterface(target).underlying();
+        address target = adapterParams.target;
+        return _isCETH(target) ? WETH : CTokenInterface(target).underlying();
     }
 
     function wrapUnderlying(uint256 uBal) external override returns (uint256) {
-        // IERC20 u = IERC20(underlying());
-        // IERC20 target = IERC20(adapterParams.target);
-        // bool isCETH = _isCETH(address(adapterParams.target));
-        // u.safeTransferFrom(msg.sender, address(this), uBal); // pull underlying
-        // if (isCETH) IWETH(WETH).withdraw(uBal); // unwrap WETH into ETH
-        // // mint target
-        // uint256 tBalBefore = target.balanceOf(address(this));
-        // if (isCETH) {
-        //     CETHTokenInterface(adapterParams.target).mint{value: uBal}();
-        // } else {
-        //     require(CTokenInterface(adapterParams.target).mint(uBal) == 0, "Mint failed");
-        // }
-        // uint256 tBalAfter = target.balanceOf(address(this));
-        // uint256 tBal = tBalAfter - tBalBefore;
-        // // transfer target to sender
-        // IERC20(target).safeTransfer(msg.sender, tBal);
-        // return tBal;
+        IERC20 u = IERC20(underlying());
+        IERC20 target = IERC20(adapterParams.target);
+        bool isCETH = _isCETH(address(adapterParams.target));
+        u.safeTransferFrom(msg.sender, address(this), uBal); // pull underlying
+        if (isCETH) IWETH(WETH).withdraw(uBal); // unwrap WETH into ETH
+        // mint target
+        uint256 tBalBefore = target.balanceOf(address(this));
+        if (isCETH) {
+            CETHTokenInterface(adapterParams.target).mint{value: uBal}();
+        } else {
+            require(CTokenInterface(adapterParams.target).mint(uBal) == 0, "Mint failed");
+        }
+        uint256 tBalAfter = target.balanceOf(address(this));
+        uint256 tBal = tBalAfter - tBalBefore;
+        // transfer target to sender
+        IERC20(target).safeTransfer(msg.sender, tBal);
+        return tBal; 
     }
 
     function unwrapTarget(uint256 tBal) external override returns (uint256) {

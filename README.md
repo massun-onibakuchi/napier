@@ -56,7 +56,7 @@ wrapUnderlying()
 unwrapTarget()
 ```
 
-![PoPV](./docs/FF.png)
+![FF](./docs/FF.png)
 
 
 ## Useful Ressources
@@ -75,6 +75,22 @@ with Y2, Napier Finance allows users to use Single-tx Bundles in an abstract man
 of different yields and can be used a Bundle for pools. 
 
 Napier Finance smart contract is what you will call sending only one transaction which calls Napier SM which will process those transactions and returns a Yield. 
+
+![nPT](./docs/nPT.png)
+
+
+
+## Solidity 
+
+We are using mev assembly code for CREATE2 function and we are keeping developing our functions and smart contracts to save the more 
+possible gas. 
+
+In terms of security, security is not the most important part, but gas is, since this is an mev hackathon and our goal is to provide
+more opportunities for our users to have the best yield and save gas. 
+
+## Latency Minimization 
+
+
 
 
 

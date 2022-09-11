@@ -57,7 +57,6 @@ contract AaveAdapter is BaseAdapter {
     // 1 : 1 
     function _scale() internal override returns (uint256) {
         return ATokenInterface(underlying()).decimals();
-
     }
 
     

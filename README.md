@@ -54,7 +54,6 @@ scale()
 getUnderlyingPrice()
 wrapUnderlying()
 unwrapTarget()
-
 ```
 
 ![PoPV](./docs/FF.png)
@@ -65,10 +64,21 @@ unwrapTarget()
 [Napier Finance](https://kita71yusuke.gitbook.io/napier-finance/)
 
 
-# Arbitrage with Napier 
+# Gas optimization 
+
+## Signle tx-bundles with Napier Principal Token as a Batcher 
+
+**The less gas you can spend the more you can be profitable.** 
+
+Instead of sending two transactions, for example deposit underlying asset in P1 with Y1 and deposit same underlying asset in P2 
+with Y2, Napier Finance allows users to use Single-tx Bundles in an abstract manner. In fact, Napier Principal Token is a batcher
+of different yields and can be used a Bundle for pools. 
+
+Napier Finance smart contract is what you will call sending only one transaction which calls Napier SM which will process those transactions and returns a Yield. 
 
 
-“Liquidity” is one of the most important factors in the financial world. This is the same for DeFi. More attractive profit opportunities attract more liquidity. This is why Napier Finance tackles liquidity provider profitability issues.
+
+
 
 
 

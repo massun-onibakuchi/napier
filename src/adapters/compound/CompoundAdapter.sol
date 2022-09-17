@@ -2,47 +2,13 @@
 pragma solidity 0.8.10;
 
 // External references
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "../../interfaces/compound/CTokenInterface.sol";
+import "../../interfaces/compound/CETHTokenInterface.sol";
+import "../../interfaces/IWETH.sol";
 
 // Internal references
 import "../BaseAdapter.sol";
-
-interface IWETH {
-    function deposit() external payable;
-
-    function withdraw(uint256 wad) external;
-}
-
-interface CTokenInterface {
-    /// @notice cToken is convertible into an ever increasing quantity of the underlying asset, as interest accrues in
-    /// the market. This function returns the exchange rate between a cToken and the underlying asset.
-    /// @dev returns the current exchange rate as an uint, scaled by 1 * 10^(18 - 8 + Underlying Token Decimals).
-    function exchangeRateCurrent() external returns (uint256);
-
-    function decimals() external returns (uint256);
-
-    function underlying() external view returns (address);
-
-    /// The mint function transfers an asset into the protocol, which begins accumulating interest based
-    /// on the current Supply Rate for the asset. The user receives a quantity of cTokens equal to the
-    /// underlying tokens supplied, divided by the current Exchange Rate.
-    /// @param mintAmount The amount of the asset to be supplied, in units of the underlying asset.
-    /// @return 0 on success, otherwise an Error code
-    function mint(uint256 mintAmount) external returns (uint256);
-
-    /// The redeem function converts a specified quantity of cTokens into the underlying asset, and returns
-    /// them to the user. The amount of underlying tokens received is equal to the quantity of cTokens redeemed,
-    /// multiplied by the current Exchange Rate. The amount redeemed must be less than the user's Account Liquidity
-    /// and the market's available liquidity.
-    /// @param redeemTokens The number of cTokens to be redeemed.
-    /// @return 0 on success, otherwise an Error code
-    function redeem(uint256 redeemTokens) external returns (uint256);
-}
-
-interface CETHTokenInterface {
-    ///@notice Send Ether to CEther to mint
-    function mint() external payable;
-}
 
 /// @notice Adapter contract for cTokens
 contract CompoundAdapter is BaseAdapter {
@@ -51,9 +17,6 @@ contract CompoundAdapter is BaseAdapter {
 
     address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address public constant CETH = 0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5;
-
-    // bool public immutable isCETH;
-
 
     constructor(AdapterParams memory _adapterParams) BaseAdapter(_adapterParams) {}
 
@@ -84,7 +47,7 @@ contract CompoundAdapter is BaseAdapter {
         uint256 tBal = tBalAfter - tBalBefore;
         // transfer target to sender
         IERC20(target).safeTransfer(msg.sender, tBal);
-        return tBal; 
+        return tBal;
     }
 
     function unwrapTarget(uint256 tBal) external override returns (uint256) {

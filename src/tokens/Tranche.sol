@@ -16,11 +16,21 @@ import {BaseAdapter as Adapter} from "../adapters/BaseAdapter.sol";
 import "./Token.sol";
 
 // For convenience
+/// @title Principal Token for each lending protocol
+/// @dev `Zero` means zero-coupon bond
 interface Zero is IToken {} // prettier-ignore
 
+/// @title Yield Token for each lending protocol
+/// @dev `Claim` means Yield Token
 interface Claim is IToken {} // prettier-ignore
 
 /// @notice You can use this contract to issue, combine, and redeem Sense ERC20 Zeros and Claims
+/// @title Napier Principal Token interface
+/// @dev This contract is responsible for issuing/redeeming each principal token.
+///      Napier Principal Token is called as nPT.
+///      nPT is like a indexed token, which is composed of some Prinicipal Tokens such as PT of aDAI and PT of cDAI.
+///      nPT is virtual token which is only minted/burned by a Napier pool when liquidity providers add/remove their liquidity.
+///      this would let LPers aggregate liquiditites and make a more profit.
 contract Tranche is ERC20, ReentrancyGuard, ITranche {
     using FixedMath for uint256;
     using SafeERC20 for IERC20Metadata;
@@ -47,7 +57,12 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
 
     // TODO: token name and symbol
     // TODO: deploy tranche with CREATE2 from factory, init with callback instead of constructor
-    // ref: Element finance and Uniswap V3
+    // TODO: This contract is deployed by the TrancheFactory. ref: Element finance and Uniswap V3
+    /// @param adapters The adapters for each lending protocol
+    /// @param _underlying The underlying asset e.g. DAI
+    /// @param _maturity The maturity of the series.
+    /// @param _sponsor  The sponsor of the series.
+    /// @param _poolFactory The factory of the pool. The poolFactory is used to get registered pools.
     constructor(
         Adapter[] memory adapters,
         address _underlying,
@@ -69,7 +84,6 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
 
             uint8 tDecimals = IERC20Metadata(adapters[i].getTarget()).decimals();
 
-            // TODO: Zero and Claim token name and symbol
             address zero = address(new Token("Zero", "ZERO", tDecimals, address(this)));
             address claim = address(new Token("Claim", "CLAIM", tDecimals, address(this)));
             uint256 iscale = adapters[i].scale();

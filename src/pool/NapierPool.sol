@@ -64,6 +64,7 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
         percentFee = _percentFee;
         percentFeeGov = _percentFeeGov;
         governance = _governance;
+
         factory = INapierPoolFactory(msg.sender);
     }
 

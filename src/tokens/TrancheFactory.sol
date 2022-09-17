@@ -7,6 +7,9 @@ import {BaseAdapter as Adapter} from "../adapters/BaseAdapter.sol";
 import "./Tranche.sol";
 
 contract TrancheFactory {
+    //  using EnumerableSet for EnumerableSet.AddressSet;
+    //  EnumerableSet.AddressSet private tranches;
+
     mapping(address => bool) private _isTrancheRegistered;
 
     function createTranche(

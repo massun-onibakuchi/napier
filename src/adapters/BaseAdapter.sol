@@ -2,14 +2,12 @@
 // Modified from https://github.com/sense-finance/sense-v1/blob/6cd5dac6b31731499a65d8fb4d94894ac7f04c96/pkg/core/src/adapters/BaseAdapter.sol
 pragma solidity 0.8.10;
 
-import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import {IERC20Metadata, IERC20} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import {FixedMath} from "../utils/FixedMath.sol";
 import {Errors} from "../utils/Errors.sol";
 
-/// @notice BaseAdapter is an abstract contract that provides common functionality for all adapters.
-/// @dev This contract is based on the BaseAdapter contract from the sense-v1 project.
 abstract contract BaseAdapter {
     using FixedMath for uint256;
     using SafeERC20 for IERC20Metadata;
@@ -55,7 +53,7 @@ abstract contract BaseAdapter {
             // check actual growth vs delta (max growth per sec)
             uint256 growthPerSec = (_value > lvalue ? _value - lvalue : lvalue - _value).fdiv(
                 lvalue * elapsed,
-                10**IERC20Metadata(adapterParams.target).decimals() // Target Base Unit
+                10**IERC20Metadata(adapterParams.target).decimals()
             );
 
             if (growthPerSec > adapterParams.delta) {
@@ -72,6 +70,8 @@ abstract contract BaseAdapter {
         return _value;
     }
 
+    
+
     /// @notice Scale getter that must be overriden by child contracts
     function _scale() internal virtual returns (uint256);
 
@@ -85,7 +85,6 @@ abstract contract BaseAdapter {
     }
 
     /// @notice Deposits underlying `amount`in return for target. Must be overriden by child contracts
-    /// @dev no funds should be left in the contract after this call
     /// @param amount Underlying amount
     /// @return amount of target returned
     function wrapUnderlying(uint256 amount) external virtual returns (uint256);

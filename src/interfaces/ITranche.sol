@@ -5,6 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {BaseAdapter as Adapter} from "../adapters/BaseAdapter.sol";
 
 /// @title Napier Principal Token interface
+/// @dev This contract is responsible for issuing/redeeming each principal token.
+///      Napier Principal Token is called as nPT.
+///      nPT is like a indexed token, which is composed of some Prinicipal Tokens such as PT of aDAI and PT of cDAI.
 interface ITranche is IERC20Metadata {
     struct Series {
         // address zero; // Zero ERC20 token
@@ -20,7 +23,9 @@ interface ITranche is IERC20Metadata {
     event SeriesInitialized(address indexed nPT, uint256 indexed maturity, address indexed sponsor);
 
     event Issued(address pt, uint256 balance, address indexed sender);
+
     event Combined(address pt, uint256 balance, address indexed sender);
+
     event Collected(address pt, uint256 collected);
 
     function maturity() external returns (uint256);
@@ -43,6 +48,7 @@ interface ITranche is IERC20Metadata {
     /// @param amount The amount to be burned
     function burnNapierPT(address account, uint256 amount) external;
 
+    /// @notice nPT scale which is calculated based on several PT scales
     function scale() external;
 
     /// @notice Mint Zeros and Claims of a specific protocol
@@ -63,6 +69,7 @@ interface ITranche is IERC20Metadata {
     /// @param uAmount Amount of Zeros to burn, which should be equivelent to the amount of Underlying owed to the caller
     function redeemZero(address pt, uint256 uAmount) external returns (uint256 tBal);
 
+    /// @notice collect accrued past yield based on the user's YT balance
     function collect(
         address usr,
         address pt,

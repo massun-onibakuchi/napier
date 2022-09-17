@@ -5,7 +5,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "../interfaces/IToken.sol";
 
-/// @title Base token contract for Principal Token and Yield Token
+/// @title Base Token
 // TODO: this contract can be deployed with minimal proxy
 contract Token is IToken, ERC20 {
     uint8 private immutable _DECIMALS;

@@ -38,7 +38,7 @@ export default function NavBar() {
                     space-between 
                     md:p-0
                     m-0
-                    text-xl
+                    
                     '
         >
           <li>

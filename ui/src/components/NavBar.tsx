@@ -12,7 +12,7 @@ export default function NavBar() {
                 bg-white
                 '
     >
-      <div className='left'>
+      <div className='left w-1/5'>
         <a className='text-2xl flex items-center px-12' href='./'>
           <div className='mr-2'>
             <img
@@ -27,7 +27,7 @@ export default function NavBar() {
       </div>
 
       <div
-        className='w-full md:flex md:items-center md:w-auto space-between '
+        className='w-1/3 md:flex md:items-center md:w-auto space-between '
         id='menu'
       >
         <ul
@@ -60,14 +60,18 @@ export default function NavBar() {
             </a>
           </li>
         </ul>
-        <div>
-          <button
-            type='button'
-            className='inline-block px-7 py-3 m-0 bg-indigo-400 text-white font-medium text-sm leading-snug uppercase rounded shadow-md'
-          >
-            Button
-          </button>
-        </div>
+      </div>
+      <div className='w-1/4 justify-end lg:flex items-center ml-auto pr-12'>
+        <div
+          style={{
+            width: '2rem',
+            height: '2rem',
+            borderRadius: '50%',
+            background:
+              'transparent conic-gradient(from 90deg at 50% 50%, #FF0707 0.00%, #E815C0 26.60%, #2244FF 41.87%, #54BC7C 63.55%, #B1C03A 76.35%, #FF8B03 100.00%) 0% 0% no-repeat padding-box',
+          }}
+        />
+        <span className='ml-1'>0xNapier...Napier</span>
       </div>
     </nav>
   );

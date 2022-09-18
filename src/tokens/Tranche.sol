@@ -117,11 +117,24 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         _burn(account, amount);
     }
 
-    function scale() public {}
+    function transfer(address, uint256) public pure override(IERC20, ERC20) returns (bool) {
+        revert("nPT: virual, transfer disabled");
+    }
+
+    function transferFrom(
+        address,
+        address,
+        uint256
+    ) public pure override(IERC20, ERC20) returns (bool) {
+        revert("nPT: virual, transferFrom disabled");
+    }
+
+    function scale() public view returns (uint256) {}
 
     /// @notice Mint Zeros and Claims of a specific protocol
     /// @param pt principal token address
     /// @param tAmount amount of Target to deposit
+    /// @return uAmount amount of PT and YT minted
     /// @dev The balance of Zeros/Claims minted will be the same value in units of underlying (less fees)
     function issue(address pt, uint256 tAmount) external nonReentrant notMatured returns (uint256 uAmount) {
         Series memory _series = series[pt];

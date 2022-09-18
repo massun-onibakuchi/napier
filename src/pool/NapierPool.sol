@@ -3,9 +3,13 @@ pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "../interfaces/INapierPool.sol";
+
+import "../utils/FixedPoint.sol";
+import "../utils/FixedMath.sol";
 
 contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
     // using FixedPoint for uint256;
@@ -41,6 +45,10 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
     /// @dev Scale value for the yield-bearing asset's first `join` (i.e. initialization)
     uint256 internal _initScale;
 
+    uint256 internal _uReserve;
+
+    uint256 internal _nptReserve;
+
     // TODO: token name and symbol
     // TODO: deploy tranche with CREATE2 from factory, init with callback instead of constructor
     // ref: Element finance and Uniswap V3
@@ -53,7 +61,7 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
         address _governance,
         string memory name,
         string memory symbol
-    ) ERC20("Napier Pool Token", "nPT") {
+    ) ERC20("Napier Pool LP Token", "Napier LPT") {
         underlying = IERC20(_underlying);
         nPT = _nPT;
         underlyingDecimals = IERC20Metadata(_underlying).decimals();
@@ -67,52 +75,128 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
         factory = INapierPoolFactory(msg.sender);
     }
 
-    function mint(address pt, address recipient) external nonReentrant returns (uint256 liquidity) {
-        // _upscaleArray(reserves);
-        // _upscaleArray(reqAmountsIn);
-        // // @todo
-        if (totalSupply() == 0) {
-            // ITranche.Series memory _series = nPT.getSeries(pt);
-            //     (uint8 _zeroi, uint8 _targeti) = getIndices();
-            // uint256 initScale = _series.adapter.scale();
-            // Convert target balance into Underlying
-            // note: We assume scale values will always be 18 decimals
-            // uint256 underlyingIn = (amount * initScale) / 1e18;
-            //     // Just like weighted pool 2 token from the balancer v2 monorepo,
-            //     // we lock MINIMUM_BPT in by minting it for the zero address – this reduces potential
-            //     // issues with rounding and ensures that this code path will only be executed once
-            //     _mintPoolTokens(address(0), MINIMUM_BPT);
-            //     // Mint the recipient BPT comensurate with the value of their join in Underlying
-            //     _mintPoolTokens(recipient, underlyingIn - MINIMUM_BPT);
-            //     // Amounts entering the Pool, so we round up
-            //     _downscaleUpArray(reqAmountsIn);
-            //     // Set the scale value all future deposits will be backdated to
-            //     _initScale = initScale;
-            //     // For the first join, we don't pull any Zeros, regardless of what the caller requested –
-            //     // this starts this pool off as synthetic Underlying only, as the yieldspace invariant expects
-            //     delete reqAmountsIn[_zeroi];
-            //     // Cache new invariant and reserves, post join
-            //     _cacheReserves(reserves);
-            //     return (reqAmountsIn, new uint256[](2));
-        } else {
-            //     (uint256 bptToMint, uint256[] memory amountsIn) = _tokensInForBptOut(reqAmountsIn, reserves);
-            //     // Amounts entering the Pool, so we round up
-            //     _downscaleUpArray(amountsIn);
-            //     // Calculate fees due before updating reserves to determine invariant growth from just swap fees
-            //     if (protocolSwapFeePercentage != 0) {
-            //         _mintPoolTokens(_protocolFeesCollector, _bptFeeDue(reserves, protocolSwapFeePercentage));
-            //     }
-            //     // `recipient` receives liquidity tokens
-            //     _mintPoolTokens(recipient, bptToMint);
-            //     // Update reserves for caching
-            //     reserves[0] += amountsIn[0];
-            //     reserves[1] += amountsIn[1];
-            //     // Cache new invariant and reserves, post join
-            //     _cacheReserves(reserves);
-            //     // Inspired by PR #990 in balancer-v2-monorepo, we always return zero dueProtocolFeeAmounts
-            //     // to the Vault, and pay protocol fees by minting BPT directly to the protocolFeeCollector instead
-            //     return (amountsIn, new uint256[](2));
+    // function mint(address pt, address recipient) external nonReentrant notMatured returns (uint256 liquidity) {
+    //     (uint256 uReserve_, uint256 nptReserve_) = getReserves();
+    //     uint256 uBal = underlying.balanceOf(address(this));
+    //     uint256 nptBal = nPT.balanceOf(address(this));
+    //     uint256 amountUnderlying = uBal - uReserve_;
+    //     uint256 nptAmount = nptBal - nptReserve_;
+    //     // nPT.issue(pt, uAmountUsed);
+    //     // nPT.mintNapierPT(address(this), nptAmountIn);
+    //     // (liquidity, , ) = _mintLP(uAmount - uAmountUsed, nptAmountIn, uReserve, nptReserve, recipient);
+    // }
+
+    function getReserves() public view returns (uint256, uint256) {
+        return (_uReserve, _nptReserve);
+    }
+
+    function mintFromUnderlying(
+        address pt,
+        uint256 uAmount,
+        address recipient
+    ) external nonReentrant notMatured returns (uint256 liquidity) {
+        // (uint112 _reserve0, uint112 _reserve1, ) = getReserves(); // gas savings
+        // uint256 balance0 = underlying.balanceOf(address(this));
+        // uint256 balance1 = IERC20(token1).balanceOf(address(this));
+        // uint256 amount0 = balance0.sub(_reserve0);
+        // uint256 amount1 = balance1.sub(_reserve1);
+
+        // uReserve := Z
+        // nptReserve := Y
+        uint256 uReserve = underlying.balanceOf(address(this));
+        uint256 nptReserve = nPT.balanceOf(address(this));
+
+        underlying.safeTransferFrom(msg.sender, address(this), uAmount);
+
+        // uAmoount := z = z' + z''
+        // uAmoountIn := z'
+        // uAmountUsed := z''
+        (uint256 uAmountUsed, uint256 nptAmountIn) = _computeNptToMint(pt, uAmount, uReserve, nptReserve);
+        // _addLiquidity(uAmountUsed, nptAmountIn, uReserve, nptReserve);
+
+        // issue pt of specified lending protocol and mint napierPt
+        nPT.issue(pt, uAmountUsed);
+        nPT.mintNapierPT(address(this), nptAmountIn);
+        (liquidity, , ) = _mintLP(uAmount - uAmountUsed, nptAmountIn, uReserve, nptReserve, recipient);
+    }
+
+    /// @dev Mints the maximum possible LP given a set of max inputs
+    /// @param uAmountIn The max underlying to deposit
+    /// @param nptAmountIn The max npt to deposit
+    /// @param uReserve The underlying reserve
+    /// @param nptReserve The nPT reserve
+    /// @param recipient The person who receives the lp funds
+    /// @return liquidity The amount of LP tokens minted
+    /// @return underlyingIn amountsIn The actual amounts of token deposited
+    /// @return nptIn  amountsIn The actual amounts of token deposited
+    function _mintLP(
+        uint256 uAmountIn,
+        uint256 nptAmountIn,
+        uint256 uReserve,
+        uint256 nptReserve,
+        address recipient
+    )
+        internal
+        returns (
+            uint256 liquidity,
+            uint256 underlyingIn,
+            uint256 nptIn
+        )
+    {
+        uint256 _totalSupply = totalSupply();
+
+        // If the pool has been initialized, but there aren't yet any Zeros in it
+        if (_totalSupply == 0) {
+            // When uninitialized we mint exactly the underlying input
+            // in LP tokens
+            // mint virtual PT and liquidity tokens
+            _mint(recipient, uAmountIn);
+            // return actual input amounts
+            return (uAmountIn, uAmountIn, 0);
         }
+        // Get the reserve ratio, the say how many underlying per npt in the reserve
+        // (input underlying / reserve underlying) is the percent increase caused by deposit
+        uint256 underlyingPerNpt = uReserve.divDown(nptReserve);
+        // Use the underlying per npt to get the needed number of input underlying
+        uint256 neededUnderlying = underlyingPerNpt.mulDown(nptAmountIn);
+
+        // If the user can't provide enough underlying
+        if (neededUnderlying > uAmountIn) {
+            // The increase in total supply is the input underlying
+            // as a ratio to reserve
+            liquidity = (uAmountIn.mulDown(_totalSupply)).divDown(uReserve);
+            // We mint a new amount of as the the percent increase given
+            // by the ratio of the input underlying to the reserve underlying
+            _mint(recipient, liquidity);
+            // In this case we use the whole input of underlying
+            // and consume (uAmountIn / underlyingPerNpt) npts
+            underlyingIn = uAmountIn;
+            nptIn = uAmountIn.divDown(underlyingPerNpt);
+        } else {
+            // We calculate the percent increase in the reserves from contributing
+            // all of the npt
+            liquidity = (neededUnderlying.mulDown(_totalSupply)).divDown(uReserve);
+            // We then mint an amount of pool token which corresponds to that increase
+            _mint(recipient, liquidity);
+            // The indicate we consumed the input npt and (nptAmountIn * underlyingPerNpt)
+            underlyingIn = neededUnderlying;
+            nptIn = nptAmountIn;
+        }
+    }
+
+    /// @param pt address
+    /// @param uAmount underlying amount
+    /// @param uReserve underlying reserve
+    /// @param nptReserve NapierPricipalToken reserve
+    /// @return uAmountUsed underlying amount used
+    /// @return nptAmount underlying amount used
+    function _computeNptToMint(
+        address pt,
+        uint256 uAmount,
+        uint256 uReserve,
+        uint256 nptReserve
+    ) internal view returns (uint256 uAmountUsed, uint256 nptAmount) {
+
     }
 
     function burn(address pt, address recipient)
@@ -121,54 +205,20 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
         returns (uint256 amountUnderunderlying, uint256 amountNPt)
     {}
 
-    /// @notice Calculate the max amount of BPT that can be minted from the requested amounts in,
-    // given the ratio of the reserves, and assuming we don't make any swaps
-    function _tokensInForBptOut(uint256[] memory reqAmountsIn, uint256[] memory reserves)
-        internal
-        returns (uint256, uint256[] memory)
-    {
-        // Disambiguate reserves wrt token type
-        // (uint8 _zeroi, uint8 _targeti) = getIndices();
-        // (uint256 zeroReserves, uint256 targetReserves) = (reserves[_zeroi], reserves[_targeti]);
-        // uint256[] memory amountsIn = new uint256[](2);
-        // // If the pool has been initialized, but there aren't yet any Zeros in it
-        // if (zeroReserves == 0) {
-        //     uint256 reqTargetIn = reqAmountsIn[_targeti];
-        //     // Mint LP shares according to the relative amount of Target being offered
-        //     uint256 bptToMint = (totalSupply() * reqTargetIn) / targetReserves;
-        //     // Pull the entire offered Target
-        //     amountsIn[_targeti] = reqTargetIn;
-        //     return (bptToMint, amountsIn);
-        // } else {
-        //     // Disambiguate requested amounts wrt token type
-        //     (uint256 reqZerosIn, uint256 reqTargetIn) = (reqAmountsIn[_zeroi], reqAmountsIn[_targeti]);
-        //     // Caclulate the percentage of the pool we'd get if we pulled all of the requested Target in
-        //     uint256 pctTarget = reqTargetIn.divDown(targetReserves);
-        //     // Caclulate the percentage of the pool we'd get if we pulled all of the requested Zeros in
-        //     uint256 pctZeros = reqZerosIn.divDown(zeroReserves);
-        //     // Determine which amountIn is our limiting factor
-        //     if (pctTarget < pctZeros) {
-        //         // If it's Target, pull the entire requested Target amountIn,
-        //         // and pull Zeros in at the percetage of the requested Target / Target reserves
-        //         uint256 bptToMint = totalSupply().mulDown(pctTarget);
-        //         amountsIn[_zeroi] = zeroReserves.mulDown(pctTarget);
-        //         amountsIn[_targeti] = reqTargetIn;
-        //         return (bptToMint, amountsIn);
-        //     } else {
-        //         // If it's Zeros, pull the entire requested Zero amountIn,
-        //         // and pull Target in at the percetage of the requested Zeros / Zero reserves
-        //         uint256 bptToMint = totalSupply().mulDown(pctZeros);
-        //         amountsIn[_zeroi] = reqZerosIn;
-        //         amountsIn[_targeti] = targetReserves.mulDown(pctZeros);
-        //         return (bptToMint, amountsIn);
-        //     }
-        // }
-    }
-
     // function swap(
     //     uint256 amountUnderlying,
     //     uint256 amountNPt,
     //     address to,
     //     bytes calldata data
     // ) external nonReentrant {}
+
+    modifier notMatured() {
+        require(block.timestamp < maturity, "Tranche: before maturity");
+        _;
+    }
+
+    modifier matured() {
+        require(block.timestamp >= maturity, "Tranche: after maturity");
+        _;
+    }
 }

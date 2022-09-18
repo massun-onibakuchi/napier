@@ -49,7 +49,7 @@ interface ITranche is IERC20Metadata {
     function burnNapierPT(address account, uint256 amount) external;
 
     /// @notice nPT scale which is calculated based on several PT scales
-    function scale() external;
+    function scale() external view returns (uint256);
 
     /// @notice Mint Zeros and Claims of a specific protocol
     /// @param pt principal token address

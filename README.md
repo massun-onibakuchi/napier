@@ -11,7 +11,7 @@ Napier Finance is a fully decentralized yield stripping protocol that enables us
 ### Our Solution : Unified Principal Tokens Liquidity
 Napier Finance introduces a unique unified liquidity AMM concept to the DeFi space. When providing liquidity, virtually calculate various yield source of Principal Tokens as one Napier Principal Token in the case with same underlying, same maturity, different yield source. This leads to higher exchange fee APY for liquidity providers, which in turn improves overall liquidity, leads to lower slippage and creates a user-friendly market.
 
-![PoPV](./docs/napiermechanics.png.png)
+![PoPV](./docs/napiermechanics.png)
 
 In addition, with the exponential birth of yield-producing protocols, Napier's target yield source protocols will also expand, and it is expected that Napier's ecosystem will grow. The more exponential birth of yield-producing protocols, the more Napier's ecosystem is expected to grow.
 

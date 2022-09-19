@@ -76,7 +76,9 @@ abstract contract BaseAdapter {
     function _scale() internal virtual returns (uint256);
 
     /// @notice Underlying token address getter that must be overriden by child contracts
-    function underlying() external view virtual returns (address);
+    function underlying() external view virtual returns (address) {
+        return adapterParams.underlying;
+    }
 
     /// @notice Tilt value getter that may be overriden by child contracts
     /// @dev Returns `0` by default, which means no principal is set aside for Claims
@@ -99,7 +101,9 @@ abstract contract BaseAdapter {
     /* ========== ACCESSORS ========== */
 
     /// @notice Returns the interest-bearing token address
-    function getTarget() external view returns (address) {}
+    function getTarget() external view returns (address) {
+        return adapterParams.target;
+    }
 
     /// @notice Returns issuance fee rate (in WAD)
     function getIssuanceFee() external view returns (uint256) {

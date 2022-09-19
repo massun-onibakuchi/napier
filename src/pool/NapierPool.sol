@@ -112,7 +112,7 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
 
         // mint pt and nPT
         underlying.safeApprove(address(nPT), uAmount);
-        (uint256 uAmountUsed, , uint256 nptAmountIn) = nPT.mint(address(this), uAmount, uReserve, nptReserve);
+        (uint256 uAmountUsed, , uint256 nptAmountIn) = nPT.mintNapierPT(pt, uAmount, uReserve, nptReserve);
 
         uint256 uAmountIn = uAmount - uAmountUsed;
         _nptReserve += nptAmountIn;

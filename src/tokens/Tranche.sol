@@ -91,6 +91,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
             address claim = address(new Token("Claim", "CLAIM", tDecimals, address(this)));
             uint256 iscale = adapters[i].scale();
 
+            _zeros.push(zero);
             series[zero] = Series({
                 claim: claim,
                 adapter: adapters[i],
@@ -107,13 +108,11 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     }
 
     /// @dev only registered pools can mint
-    /// @param account The address to send the minted tokens
-    /// @param amount The amount to be minted
-    function mintNapierPT(address account, uint256 amount) external onlyPool notMatured {
-        _mint(account, amount);
-    }
-
-    function mint(
+    /// @param pt The principal token address
+    /// @param uAmount deposit amount of underlying
+    /// @param uReserve underlying reserve
+    /// @param nptReserve NapierPT reserve
+    function mintNapierPT(
         address pt,
         uint256 uAmount,
         uint256 uReserve,
@@ -328,6 +327,10 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         uint256 uAmountTransfer,
         address to
     ) internal returns (uint256 collected) {}
+
+    function getZeros() external view returns (address[] memory) {
+        return _zeros;
+    }
 
     function getSeries(address pt) external view returns (Series memory) {
         return series[pt];

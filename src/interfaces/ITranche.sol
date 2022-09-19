@@ -36,6 +36,19 @@ interface ITranche is IERC20Metadata {
 
     function getSeries(address) external view returns (Series memory);
 
+    function mint(
+        address pt,
+        uint256 uAmount,
+        uint256 uReserve,
+        uint256 nptReserve
+    )
+        external
+        returns (
+            uint256 uAmountUse,
+            uint256 ptAmount,
+            uint256 nptAmount
+        );
+
     /// @notice mint NapierPT
     /// @dev only registered pools can mint
     /// @param account The address to send the minted tokens
@@ -49,7 +62,7 @@ interface ITranche is IERC20Metadata {
     function burnNapierPT(address account, uint256 amount) external;
 
     /// @notice nPT scale which is calculated based on several PT scales
-    function scale() external view returns (uint256);
+    function scale() external returns (uint256);
 
     /// @notice Mint Zeros and Claims of a specific protocol
     /// @param pt principal token address

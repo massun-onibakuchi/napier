@@ -12,7 +12,8 @@ import "../utils/FixedPoint.sol";
 import "../utils/FixedMath.sol";
 
 contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
-    // using FixedPoint for uint256;
+    using FixedPoint for uint256;
+    using SafeERC20 for IERC20;
 
     INapierPoolFactory public immutable override factory;
 
@@ -41,9 +42,6 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
 
     // The percent of LP fees that is payed to governance
     uint256 public immutable percentFeeGov;
-
-    /// @dev Scale value for the yield-bearing asset's first `join` (i.e. initialization)
-    uint256 internal _initScale;
 
     uint256 internal _uReserve;
 
@@ -75,16 +73,16 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
         factory = INapierPoolFactory(msg.sender);
     }
 
-    // function mint(address pt, address recipient) external nonReentrant notMatured returns (uint256 liquidity) {
-    //     (uint256 uReserve_, uint256 nptReserve_) = getReserves();
-    //     uint256 uBal = underlying.balanceOf(address(this));
-    //     uint256 nptBal = nPT.balanceOf(address(this));
-    //     uint256 amountUnderlying = uBal - uReserve_;
-    //     uint256 nptAmount = nptBal - nptReserve_;
-    //     // nPT.issue(pt, uAmountUsed);
-    //     // nPT.mintNapierPT(address(this), nptAmountIn);
-    //     // (liquidity, , ) = _mintLP(uAmount - uAmountUsed, nptAmountIn, uReserve, nptReserve, recipient);
-    // }
+    function mint(address pt, address recipient) external nonReentrant notMatured returns (uint256 liquidity) {
+        //     (uint256 uReserve_, uint256 nptReserve_) = getReserves();
+        //     uint256 uBal = underlying.balanceOf(address(this));
+        //     uint256 nptBal = nPT.balanceOf(address(this));
+        //     uint256 amountUnderlying = uBal - uReserve_;
+        //     uint256 nptAmount = nptBal - nptReserve_;
+        //     // nPT.issue(pt, uAmountUsed);
+        //     // nPT.mintNapierPT(address(this), nptAmountIn);
+        //     // (liquidity, , ) = _mintLP(uAmount - uAmountUsed, nptAmountIn, uReserve, nptReserve, recipient);
+    }
 
     function getReserves() public view returns (uint256, uint256) {
         return (_uReserve, _nptReserve);
@@ -111,13 +109,16 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
         // uAmoount := z = z' + z''
         // uAmoountIn := z'
         // uAmountUsed := z''
-        (uint256 uAmountUsed, uint256 nptAmountIn) = _computeNptToMint(pt, uAmount, uReserve, nptReserve);
-        // _addLiquidity(uAmountUsed, nptAmountIn, uReserve, nptReserve);
 
-        // issue pt of specified lending protocol and mint napierPt
-        nPT.issue(pt, uAmountUsed);
-        nPT.mintNapierPT(address(this), nptAmountIn);
-        (liquidity, , ) = _mintLP(uAmount - uAmountUsed, nptAmountIn, uReserve, nptReserve, recipient);
+        // mint pt and nPT
+        underlying.safeApprove(address(nPT), uAmount);
+        (uint256 uAmountUsed, , uint256 nptAmountIn) = nPT.mint(address(this), uAmount, uReserve, nptReserve);
+
+        uint256 uAmountIn = uAmount - uAmountUsed;
+        _nptReserve += nptAmountIn;
+        _uReserve += uAmountIn;
+
+        (liquidity, , ) = _mintLP(uAmountIn, nptAmountIn, uReserve, nptReserve, recipient);
     }
 
     /// @dev Mints the maximum possible LP given a set of max inputs
@@ -182,21 +183,6 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
             underlyingIn = neededUnderlying;
             nptIn = nptAmountIn;
         }
-    }
-
-    /// @param pt address
-    /// @param uAmount underlying amount
-    /// @param uReserve underlying reserve
-    /// @param nptReserve NapierPricipalToken reserve
-    /// @return uAmountUsed underlying amount used
-    /// @return nptAmount underlying amount used
-    function _computeNptToMint(
-        address pt,
-        uint256 uAmount,
-        uint256 uReserve,
-        uint256 nptReserve
-    ) internal view returns (uint256 uAmountUsed, uint256 nptAmount) {
-
     }
 
     function burn(address pt, address recipient)

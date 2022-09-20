@@ -13,11 +13,11 @@ import "../utils/FixedMath.sol";
 
 contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
     using FixedPoint for uint256;
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
 
     INapierPoolFactory public immutable override factory;
 
-    IERC20 public immutable override underlying;
+    IERC20Metadata public immutable override underlying;
 
     uint8 public immutable underlyingDecimals;
 
@@ -51,7 +51,7 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
     // TODO: deploy tranche with CREATE2 from factory, init with callback instead of constructor
     // ref: Element finance and Uniswap V3
     constructor(
-        address _underlying,
+        IERC20Metadata _underlying,
         ITranche _nPT,
         uint256 _maturity,
         uint256 _percentFee,
@@ -60,9 +60,9 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
         string memory name,
         string memory symbol
     ) ERC20("Napier Pool LP Token", "Napier LPT") {
-        underlying = IERC20(_underlying);
+        underlying = _underlying;
         nPT = _nPT;
-        underlyingDecimals = IERC20Metadata(_underlying).decimals();
+        underlyingDecimals = _underlying.decimals();
         nptDecimals = _nPT.decimals();
 
         require(_maturity > block.timestamp, "NapierPool: Maturity in the past");
@@ -88,6 +88,9 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
         return (_uReserve, _nptReserve);
     }
 
+    /// @param pt The Principal Token of a lending protocol
+    /// @param uAmount amount of underlying
+    /// @param recipient The address to receive the minted liquidity token
     function mintFromUnderlying(
         address pt,
         uint256 uAmount,

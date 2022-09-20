@@ -7,6 +7,8 @@ interface CTokenInterface {
     /// @dev returns the current exchange rate as an uint, scaled by 1 * 10^(18 - 8 + Underlying Token Decimals).
     function exchangeRateCurrent() external returns (uint256);
 
+    function exchangeRateStored() external view returns (uint256);
+
     function decimals() external returns (uint256);
 
     function underlying() external view returns (address);

@@ -13,11 +13,14 @@ import "forge-std/Test.sol";
 abstract contract TestAdapter is Test {
     using FixedMath for uint256;
 
+    uint256 internal constant FORK_BLOCK = 15540000;
+
     uint256 internal constant DELTA = 150;
     uint256 internal constant MIN_MATURITY = 2 weeks;
     uint256 internal constant MAX_MATURITY = 14 weeks;
-    uint256 internal constant FORK_BLOCK = 15540000;
 
+    uint8 internal U_DECIMALS;
+    uint8 internal T_DECIMALS;
     uint256 internal U_BASE;
     uint256 internal T_BASE;
 
@@ -45,8 +48,10 @@ abstract contract TestAdapter is Test {
         assertTrue(address(tranche) != address(0), "setup: tranche is zero address");
 
         zeros = tranche.getZeros();
-        U_BASE = 10**IERC20Metadata(underlying).decimals();
-        T_BASE = 10**IERC20Metadata(target).decimals();
+        U_DECIMALS = IERC20Metadata(underlying).decimals();
+        T_DECIMALS = IERC20Metadata(target).decimals();
+        U_BASE = 10**U_DECIMALS;
+        T_BASE = 10**T_DECIMALS;
 
         // label
         vm.label(address(underlying), "underlying");
@@ -61,6 +66,9 @@ abstract contract TestAdapter is Test {
         _fund();
 
         // approve
+        IERC20(underlying).approve(address(adapter), type(uint256).max);
+        IERC20(target).approve(address(adapter), type(uint256).max);
+
         IERC20(underlying).approve(address(tranche), type(uint256).max);
         IERC20(target).approve(address(tranche), type(uint256).max);
     }
@@ -89,20 +97,36 @@ abstract contract TestAdapter is Test {
         assertEq(address(tranche.poolFactory()), address(this));
     }
 
-    // function testScale() public virtual {
-    //     assertEq(tranche.scale(), 10**18);
-    // }
+    function testWrapUnderlying() public virtual {
+        uint256 scale = adapter.scale(); // in WAD
+        uint256 uAmount = IERC20(underlying).balanceOf(address(this));
+        uint256 tBalBefore = IERC20(target).balanceOf(address(this));
+
+        uint256 tBal = adapter.wrapUnderlying(uAmount);
+
+        assertEq(IERC20(target).balanceOf(address(this)) - tBalBefore, tBal, "target bal");
+        assertEq(IERC20(underlying).balanceOf(address(this)), 0, "underlying bal");
+        assertEq(IERC20(underlying).balanceOf(address(adapter)), 0, "underlying bal of adapter");
+        assertApproxEqRel(
+            tBal,
+            _normalize((uAmount * 1e18) / scale, U_DECIMALS, T_DECIMALS), // normalize to target decimals
+            0.000_000_1e18,
+            "inconsistent value"
+        );
+    }
+
+    function testUnwrapUnderlying() public virtual {}
 
     function testIssue() public virtual {
         address pt = zeros[0];
         address claim = tranche.getSeries(pt).claim;
         uint256 tAmount = IERC20(target).balanceOf(address(this));
 
-        // tAmount = tAmountSubFee * scale / T_BASE;
+        // tAmount = tAmountSubFee * scale / WAD;
         uint256 scale = adapter.scale();
-        uint256 fee = feePst.fmul(tAmount, T_BASE);
-        uint256 mintAmount = (tAmount - fee).fmul(scale, T_BASE);
-        console.log("mintAmount :>>", mintAmount);
+        uint256 fee = feePst.fmul(tAmount);
+        uint256 mintAmount = (tAmount - fee).fmul(scale);
+
         // issue cToken-PT
         tranche.issue(pt, tAmount);
         assertEq(IERC20(pt).balanceOf(address(this)), mintAmount);
@@ -115,30 +139,31 @@ abstract contract TestAdapter is Test {
         address claim = tranche.getSeries(pt).claim;
         uint256 uAmount = IERC20(underlying).balanceOf(address(this));
 
-        // tAmount = tAmountSubFee * scale / T_BASE;
+        // tAmount = tAmountSubFee * scale / WAD;
         uint256 scale = adapter.scale();
-        uint256 tAmount = uAmount.fmul(T_BASE, scale);
-        uint256 fee = feePst.fmul(tAmount, T_BASE);
-        uint256 mintAmount = (tAmount - fee).fmul(scale, T_BASE);
+        uint256 tAmount = _normalize(uAmount, U_DECIMALS, T_DECIMALS).fdiv(scale);
+        uint256 fee = feePst.fmul(tAmount);
+        uint256 mintAmount = (tAmount - fee).fmul(scale);
 
         // issue cToken-PT
         tranche.issueFromUnderlying(pt, uAmount);
+        // NOTE: mintAmount is in units of target token (same decimals as target token)
         assertApproxEqRel(
-            uAmount,
+            _normalize(uAmount, U_DECIMALS, T_DECIMALS),
             mintAmount,
-            0.0001e18, // An 18 decimal fixed point number, where 1e18 == 100%
-            "issueFromUnderlying: uAmount !~= mintAmount"
+            0.000_000_1e18, // An 18 decimal fixed point number, where 1e18 == 100%
+            "uAmount !~= mintAmount"
         );
         assertApproxEqRel(
             IERC20(pt).balanceOf(address(this)),
             mintAmount,
-            0.000_1e18, // An 18 decimal fixed point number, where 1e18 == 100%
+            0.000_000_1e18, // An 18 decimal fixed point number, where 1e18 == 100%
             "zero amount"
         );
         assertApproxEqRel(
             IERC20(claim).balanceOf(address(this)),
             mintAmount,
-            0.000_1e18, // An 18 decimal fixed point number, where 1e18 == 100%
+            0.000_000_1e18, // An 18 decimal fixed point number, where 1e18 == 100%
             "claim amount"
         );
         assertEq(tranche.lscales(pt, address(this)), scale);
@@ -150,5 +175,28 @@ abstract contract TestAdapter is Test {
 
         vm.expectRevert("nPT: transferFrom disabled");
         tranche.transferFrom(address(1), address(2), 1);
+    }
+
+    /// @dev Takes an 'amount' encoded with 'decimalsBefore' decimals and
+    ///      re encodes it with 'decimalsAfter' decimals
+    /// @param amount The amount to normalize
+    /// @param decimalsBefore The decimal encoding before
+    /// @param decimalsAfter The decimal encoding after
+    function _normalize(
+        uint256 amount,
+        uint8 decimalsBefore,
+        uint8 decimalsAfter
+    ) internal pure returns (uint256) {
+        // If we need to increase the decimals
+        if (decimalsBefore > decimalsAfter) {
+            // Then we shift right the amount by the number of decimals
+            amount = amount / 10**(decimalsBefore - decimalsAfter);
+            // If we need to decrease the number
+        } else if (decimalsBefore < decimalsAfter) {
+            // then we shift left by the difference
+            amount = amount * 10**(decimalsAfter - decimalsBefore);
+        }
+        // If nothing changed this is a no-op
+        return amount;
     }
 }

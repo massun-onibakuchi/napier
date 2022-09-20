@@ -250,7 +250,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     }
 
     /// @notice Mint Zeros and Claims of a specific protocol
-    /// @dev The balance of Zeros/Claims minted will be the same value in units of underlying (less fees)
+    /// @dev The balance of Zeros/Claims minted will be the same value in units of target (less fees)
     /// @param pt principal token address
     /// @param uAmount amount of underlying to deposit
     /// @return mintAmount amount of PT and YT minted
@@ -281,7 +281,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     /// @param pt principal token address
     /// @param tAmount amount of Target to deposit
     /// @return mintAmount amount of PT and YT minted
-    /// @dev The balance of Zeros/Claims minted will be the same value in units of underlying (less fees)
+    /// @dev The balance of Zeros/Claims minted will be the same value in units of target (less fees)
     function issue(address pt, uint256 tAmount) external nonReentrant notMatured returns (uint256 mintAmount) {
         Series memory _series = series[pt];
         IERC20(_series.adapter.getTarget()).safeTransferFrom(msg.sender, address(this), tAmount);
@@ -313,13 +313,13 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         // If the caller has not collected on Claims before, use the current scale value to determine how many Zeros/Claims to mint
         // so that the Claims they mint here are "clean," in that they have no yet-to-be-collected yield
         if (_scale == 0) {
-            _scale = _series.adapter.scale(); // in WAD term
+            _scale = _series.adapter.scale(); // NOTE: in WAD term
             lscales[_pt][_recipient] = _scale;
         }
 
         // Determine the amount of Underlying equal to the Target being sent in (the principal)
         // the amount of Zeros/Claims to mint is the amount of Target deposited (sub fee), multipled by the last scale value
-        mintAmount = tAmountSubFee.fmul(_scale); // in target token term
+        mintAmount = tAmountSubFee.fmul(_scale); // NOTE: in target token term
 
         // Mint equal amounts of Zeros and Claims
         IZero(_pt).mint(_recipient, mintAmount);

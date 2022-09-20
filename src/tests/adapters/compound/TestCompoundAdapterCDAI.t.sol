@@ -3,12 +3,12 @@ pragma solidity 0.8.10;
 
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import "../../tokens/Tranche.sol";
-import "../../adapters/compound/CompoundAdapter.sol";
+import "../../../tokens/Tranche.sol";
+import "../../../adapters/compound/CompoundAdapter.sol";
 
-import "../../utils/FixedMath.sol";
+import "../../../utils/FixedMath.sol";
 
-import "./TestAdapter.t.sol";
+import "../TestAdapter.t.sol";
 
 contract TestCompoundAdapterCDAI is TestAdapter {
     using FixedMath for uint256;

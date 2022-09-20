@@ -32,7 +32,7 @@ interface ITranche is IERC20Metadata {
 
     function issuance() external returns (uint256);
 
-    function underlying() external returns (IERC20);
+    function underlying() external returns (IERC20Metadata);
 
     function getZeros() external view returns (address[] memory);
 

@@ -33,7 +33,7 @@ interface IClaim is IToken {} // prettier-ignore
 ///      this would let LPers aggregate liquiditites and make a more profit.
 contract Tranche is ERC20, ReentrancyGuard, ITranche {
     using FixedMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
 
     string private constant ZERO_SYMBOL_PREFIX = "pT";
     string private constant ZERO_NAME_PREFIX = "PrincipalToken";
@@ -48,7 +48,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     // timestamp of series initialization
     uint256 public immutable override issuance;
 
-    IERC20 public immutable override underlying;
+    IERC20Metadata public immutable override underlying;
 
     address public immutable sponsor;
 
@@ -71,7 +71,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     /// @param _poolFactory The factory of the pool. The poolFactory is used to get registered pools.
     constructor(
         Adapter[] memory _adapters,
-        address _underlying,
+        IERC20Metadata _underlying,
         uint256 _maturity,
         address _sponsor,
         INapierPoolFactory _poolFactory
@@ -81,7 +81,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         issuance = block.timestamp;
         maturity = _maturity;
         sponsor = _sponsor;
-        underlying = IERC20(_underlying);
+        underlying = _underlying;
         poolFactory = _poolFactory;
 
         (, string memory m, string memory y) = DateTime.toDateString(_maturity);
@@ -89,7 +89,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
 
         uint256 len = _adapters.length;
         for (uint256 i = 0; i < len; ) {
-            require(_underlying == _adapters[i].underlying(), "Tranche: underlying mismatch");
+            require(address(_underlying) == _adapters[i].underlying(), "Tranche: underlying mismatch");
 
             address zero;
             address claim;
@@ -137,17 +137,13 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     function name() public view override(ERC20, IERC20Metadata) returns (string memory) {
         (, string memory m, string memory y) = DateTime.toDateString(maturity);
         string memory datestring = string(abi.encodePacked(" ", m, "-", y));
-        (bool success, bytes memory returnData) = address(underlying).staticcall(abi.encodeWithSignature("name()"));
-        require(success, "Tranche: failed");
-        return string(abi.encodePacked("Napier Principal Token ", abi.decode(returnData, (string)), datestring));
+        return string(abi.encodePacked("Napier Principal Token ", underlying.name(), datestring));
     }
 
     function symbol() public view override(ERC20, IERC20Metadata) returns (string memory) {
         (, string memory m, string memory y) = DateTime.toDateString(maturity);
         string memory datestring = string(abi.encodePacked(" ", m, "-", y));
-        (bool success, bytes memory returnData) = address(underlying).staticcall(abi.encodeWithSignature("symbol()"));
-        require(success, "Tranche: failed");
-        return string(abi.encodePacked("NapierPT ", abi.decode(returnData, (string)), datestring));
+        return string(abi.encodePacked("NapierPT ", underlying.symbol(), datestring));
     }
 
     /// @dev only registered pools can mint
@@ -200,7 +196,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         if (_nptReserve != 0) {
             // _uAmount * _nptReserve / (nptScale * _uReserve * (1 - feePst) + _nptReserve)
             uint256 feePst = series[_pt].adapter.getIssuanceFee();
-            uint256 nptScale = _nptScale();
+            uint256 nptScale = _nptScale(); // in WAD
             uAmountUse = _uAmount.fmul(
                 _nptReserve.fdiv(nptScale.fmul(_uReserve).fmul(FixedMath.WAD - feePst) + _nptReserve)
             );
@@ -208,19 +204,21 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         }
     }
 
+    /// @notice calculate the scale of napier PT. the sum of ptBal * ptScale for each pts.
+    /// @return scale in WAD
     function _nptScale() internal returns (uint256) {
         // TODO: gas optimization
+        uint256 len = _zeros.length;
         uint256 weightedScaleSum;
         uint256 totalPtBal;
-        for (uint256 i = 0; i < _zeros.length; i++) {
+        for (uint256 i = 0; i < len; i++) {
             IZero zero = IZero(_zeros[i]);
             uint8 tDecimals = zero.decimals();
             // zero bal is in terget token term
             // normalized to 18 decimals
-            // uint256 ptBal = _normalize(zero.balanceOf(address(this), tDecimals));
-            uint256 ptBal = zero.balanceOf(address(this));
+            uint256 ptBal = _normalize(zero.balanceOf(address(this)), tDecimals);
 
-            weightedScaleSum += ptBal.fmul(series[address(zero)].adapter.scale(), 10**tDecimals);
+            weightedScaleSum += ptBal.fmul(series[address(zero)].adapter.scale());
             totalPtBal += ptBal;
         }
         return weightedScaleSum.fdiv(totalPtBal);
@@ -284,7 +282,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     /// @dev The balance of Zeros/Claims minted will be the same value in units of target (less fees)
     function issue(address pt, uint256 tAmount) external nonReentrant notMatured returns (uint256 mintAmount) {
         Series memory _series = series[pt];
-        IERC20(_series.adapter.getTarget()).safeTransferFrom(msg.sender, address(this), tAmount);
+        IERC20Metadata(_series.adapter.getTarget()).safeTransferFrom(msg.sender, address(this), tAmount);
         mintAmount = _issue(pt, _series, msg.sender, tAmount);
     }
 

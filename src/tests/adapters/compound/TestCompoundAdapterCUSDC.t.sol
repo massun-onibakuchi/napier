@@ -35,6 +35,12 @@ contract TestCompoundAdapterCUSDC is TestAdapter {
 
         Adapter[] memory adapters = new Adapter[](1);
         adapters[0] = adapter;
-        tranche = new Tranche(adapters, underlying, maturity, address(this), INapierPoolFactory(address(this)));
+        tranche = new Tranche(
+            adapters,
+            IERC20Metadata(underlying),
+            maturity,
+            address(this),
+            INapierPoolFactory(address(this))
+        );
     }
 }

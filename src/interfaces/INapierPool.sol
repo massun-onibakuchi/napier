@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.10;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import "./INapierPoolFactory.sol";
 import "./ITranche.sol";
@@ -11,7 +11,7 @@ import "./ITranche.sol";
 interface INapierPool {
     function factory() external returns (INapierPoolFactory);
 
-    function underlying() external returns (IERC20);
+    function underlying() external returns (IERC20Metadata);
 
     function nPT() external returns (ITranche);
 

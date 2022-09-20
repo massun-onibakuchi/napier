@@ -18,7 +18,9 @@ contract CompoundAdapter is BaseAdapter {
     address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address public constant CETH = 0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5;
 
-    constructor(AdapterParams memory _adapterParams) BaseAdapter(_adapterParams) {}
+    constructor(AdapterParams memory _adapterParams) BaseAdapter(_adapterParams) {
+        IERC20(_adapterParams.underlying).safeApprove(_adapterParams.target, type(uint256).max);
+    }
 
     function _scale() internal override returns (uint256) {
         uint256 decimals = CTokenInterface(underlying()).decimals();
@@ -51,23 +53,26 @@ contract CompoundAdapter is BaseAdapter {
     }
 
     function unwrapTarget(uint256 tBal) external override returns (uint256) {
-        // IERC20 u = IERC20(underlying());
-        // bool isCETH = _isCETH(address(adapterParams.target));
-        // IERC20 target = IERC20(adapterParams.target);
-        // target.safeTransferFrom(msg.sender, address(this), tBal); // pull target
-        // // redeem target for underlying
-        // uint256 uBalBefore = isCETH ? address(this).balance : u.balanceOf(address(this));
-        // require(CTokenInterface(adapterParams.target).redeem(tBal) == 0, "Redeem failed");
-        // uint256 uBalAfter = isCETH ? address(this).balance : u.balanceOf(address(this));
-        // uint256 uBal = uBalAfter - uBalBefore;
-        // if (isCETH) {
-        //     // deposit ETH into WETH contract
-        //     (bool success, ) = WETH.call{value: uBal}("");
-        //     require(success, "Transfer failed.");
-        // }
-        // // transfer underlying to sender
-        // u.safeTransfer(msg.sender, uBal);
-        // return uBal;
+        IERC20 u = IERC20(underlying());
+        IERC20 target = IERC20(adapterParams.target);
+        bool isCETH = _isCETH(address(target));
+
+        target.safeTransferFrom(msg.sender, address(this), tBal); // pull target
+
+        // redeem target for underlying
+        uint256 uBalBefore = isCETH ? address(this).balance : u.balanceOf(address(this));
+        require(CTokenInterface(adapterParams.target).redeem(tBal) == 0, "Redeem failed");
+        uint256 uBalAfter = isCETH ? address(this).balance : u.balanceOf(address(this));
+        uint256 uBal = uBalAfter - uBalBefore;
+
+        if (isCETH) {
+            // deposit ETH into WETH contract
+            (bool success, ) = WETH.call{value: uBal}("");
+            require(success, "Adapter: ETH Transfer failed.");
+        }
+        // transfer underlying to sender
+        u.safeTransfer(msg.sender, uBal);
+        return uBal;
     }
 
     function _isCETH(address target) internal view returns (bool) {

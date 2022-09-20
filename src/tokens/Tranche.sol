@@ -40,7 +40,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     string private constant CLAIM_SYMBOL_PREFIX = "yT";
     string private constant CLAIM_NAME_PREFIX = "YieldToken";
 
-    uint256 public constant ISSUANCE_FEE_CAP = 0.1e18; // 10% issuance fee cap
+    uint256 private constant ISSUANCE_FEE_CAP = 0.1e18; // 10% issuance fee cap
 
     // timestamp of series end
     uint256 public immutable override maturity;
@@ -296,21 +296,11 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     ) internal returns (uint256 mintAmount) {
         require(_series.claim != address(0), "Tranche: invalid pt");
 
-        IERC20Metadata target = IERC20Metadata(_series.adapter.getTarget());
-        uint256 tDecimals = target.decimals();
-        uint256 tBase = 10**tDecimals;
-        uint256 fee;
-
         // Take the issuance fee out of the deposited Target, and put it towards the settlement reward
-        uint256 issuanceFee = _series.adapter.getIssuanceFee();
-        require(issuanceFee <= ISSUANCE_FEE_CAP, "Tranche: issuance fee too high");
+        uint256 feePst = _series.adapter.getIssuanceFee(); // in WAD term
+        require(feePst <= ISSUANCE_FEE_CAP, "Tranche: issuance fee too high");
 
-        if (tDecimals != 18) {
-            uint256 base = (tDecimals < 18 ? issuanceFee / (10**(18 - tDecimals)) : issuanceFee * 10**(tDecimals - 18));
-            fee = base.fmul(_tAmount, tBase);
-        } else {
-            fee = issuanceFee.fmul(_tAmount, tBase);
-        }
+        uint256 fee = _tAmount.fmul(feePst);
 
         // update accrued fees
         series[_pt].reward += fee;
@@ -329,7 +319,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
 
         // Determine the amount of Underlying equal to the Target being sent in (the principal)
         // the amount of Zeros/Claims to mint is the amount of Target deposited (sub fee), multipled by the last scale value
-        mintAmount = tAmountSubFee.fmul(_scale, tBase); // in WAD term
+        mintAmount = tAmountSubFee.fmul(_scale); // in target token term
 
         // Mint equal amounts of Zeros and Claims
         IZero(_pt).mint(_recipient, mintAmount);

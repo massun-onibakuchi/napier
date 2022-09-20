@@ -7,8 +7,8 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "../utils/FixedMath.sol";
+import "../utils/DateTime.sol";
 
-// import "../interfaces/IToken.sol";
 import "../interfaces/ITranche.sol";
 import "../interfaces/INapierPoolFactory.sol";
 
@@ -35,7 +35,12 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     using FixedMath for uint256;
     using SafeERC20 for IERC20;
 
-    uint256 public constant ISSUANCE_FEE_CAP = 0.1e18; // 10% issuance fee cap
+    string private constant ZERO_SYMBOL_PREFIX = "pT";
+    string private constant ZERO_NAME_PREFIX = "PrincipalToken";
+    string private constant CLAIM_SYMBOL_PREFIX = "yT";
+    string private constant CLAIM_NAME_PREFIX = "YieldToken";
+
+    uint256 private constant ISSUANCE_FEE_CAP = 0.1e18; // 10% issuance fee cap
 
     // timestamp of series end
     uint256 public immutable override maturity;
@@ -57,16 +62,15 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     /// @notice pt -> user -> lscale (last scale)
     mapping(address => mapping(address => uint256)) public lscales;
 
-    // TODO: token name and symbol
     // TODO: deploy tranche with CREATE2 from factory, init with callback instead of constructor
     // TODO: This contract is deployed by the TrancheFactory. ref: Element finance and Uniswap V3
-    /// @param adapters The adapters for each lending protocol
+    /// @param _adapters The adapters for each lending protocol
     /// @param _underlying The underlying asset e.g. DAI
     /// @param _maturity The maturity of the series.
     /// @param _sponsor  The sponsor of the series.
     /// @param _poolFactory The factory of the pool. The poolFactory is used to get registered pools.
     constructor(
-        Adapter[] memory adapters,
+        Adapter[] memory _adapters,
         address _underlying,
         uint256 _maturity,
         address _sponsor,
@@ -80,31 +84,70 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         underlying = IERC20(_underlying);
         poolFactory = _poolFactory;
 
-        uint256 len = adapters.length;
+        (, string memory m, string memory y) = DateTime.toDateString(_maturity);
+        string memory datestring = string(abi.encodePacked(" ", m, "-", y));
+
+        uint256 len = _adapters.length;
         for (uint256 i = 0; i < len; ) {
-            require(_underlying == adapters[i].underlying(), "Tranche: underlying mismatch");
+            require(_underlying == _adapters[i].underlying(), "Tranche: underlying mismatch");
 
-            IERC20Metadata target = IERC20Metadata(adapters[i].getTarget());
-            uint8 tDecimals = target.decimals();
+            address zero;
+            address claim;
+            {
+                IERC20Metadata target = IERC20Metadata(_adapters[i].getTarget());
+                string memory _name = target.name();
+                string memory _symbol = target.symbol();
+                uint8 tDecimals = target.decimals();
 
-            address zero = address(new Token("Zero", "ZERO", tDecimals, address(this)));
-            address claim = address(new Token("Claim", "CLAIM", tDecimals, address(this)));
-            uint256 iscale = adapters[i].scale();
+                zero = address(
+                    new Token(
+                        string(abi.encodePacked(_name, datestring, " ", ZERO_NAME_PREFIX)),
+                        string(abi.encodePacked(ZERO_SYMBOL_PREFIX, _symbol, datestring)),
+                        tDecimals,
+                        address(this)
+                    )
+                );
+                claim = address(
+                    new Token(
+                        string(abi.encodePacked(_name, datestring, " ", CLAIM_NAME_PREFIX)),
+                        string(abi.encodePacked(CLAIM_SYMBOL_PREFIX, _symbol, datestring)),
+                        tDecimals,
+                        address(this)
+                    )
+                );
+            }
+            uint256 iscale = _adapters[i].scale();
 
             _zeros.push(zero);
             series[zero] = Series({
                 claim: claim,
-                adapter: adapters[i],
+                adapter: _adapters[i],
                 reward: 0,
                 iscale: iscale,
                 mscale: 0,
                 maxscale: iscale,
-                tilt: adapters[i].tilt()
+                tilt: _adapters[i].tilt()
             });
             unchecked {
                 i++;
             }
         }
+    }
+
+    function name() public view override(ERC20, IERC20Metadata) returns (string memory) {
+        (, string memory m, string memory y) = DateTime.toDateString(maturity);
+        string memory datestring = string(abi.encodePacked(" ", m, "-", y));
+        (bool success, bytes memory returnData) = address(underlying).staticcall(abi.encodeWithSignature("name()"));
+        require(success, "Tranche: failed");
+        return string(abi.encodePacked("Napier Principal Token ", abi.decode(returnData, (string)), datestring));
+    }
+
+    function symbol() public view override(ERC20, IERC20Metadata) returns (string memory) {
+        (, string memory m, string memory y) = DateTime.toDateString(maturity);
+        string memory datestring = string(abi.encodePacked(" ", m, "-", y));
+        (bool success, bytes memory returnData) = address(underlying).staticcall(abi.encodeWithSignature("symbol()"));
+        require(success, "Tranche: failed");
+        return string(abi.encodePacked("NapierPT ", abi.decode(returnData, (string)), datestring));
     }
 
     /// @dev only registered pools can mint
@@ -141,25 +184,25 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         _mint(msg.sender, nptAmount);
     }
 
-    /// @param pt address
-    /// @param uAmount underlying amount
-    /// @param uReserve underlying reserve
-    /// @param nptReserve NapierPricipalToken reserve
+    /// @param _pt address
+    /// @param _uAmount underlying amount
+    /// @param _uReserve underlying reserve
+    /// @param _nptReserve NapierPricipalToken reserve
     /// @return uAmountUse underlying amount used
     /// @return nptAmount underlying amount used
     function _computeNptToMint(
-        address pt,
-        uint256 uAmount,
-        uint256 uReserve,
-        uint256 nptReserve
+        address _pt,
+        uint256 _uAmount,
+        uint256 _uReserve,
+        uint256 _nptReserve
     ) internal returns (uint256 uAmountUse, uint256 nptAmount) {
         // We do not add Principal Token liquidity if it haven't been initialized yet
-        if (nptReserve != 0) {
-            // uAmount * nptReserve / (nptScale * uReserve * (1 - feePst) + nptReserve)
-            uint256 feePst = series[pt].adapter.getIssuanceFee();
+        if (_nptReserve != 0) {
+            // _uAmount * _nptReserve / (nptScale * _uReserve * (1 - feePst) + _nptReserve)
+            uint256 feePst = series[_pt].adapter.getIssuanceFee();
             uint256 nptScale = _nptScale();
-            uAmountUse = uAmount.fmul(
-                nptReserve.fdiv(nptScale.fmul(uReserve).fmul(FixedMath.WAD - feePst) + nptReserve)
+            uAmountUse = _uAmount.fmul(
+                _nptReserve.fdiv(nptScale.fmul(_uReserve).fmul(FixedMath.WAD - feePst) + _nptReserve)
             );
             nptAmount = uAmountUse.fmul(nptScale);
         }
@@ -170,13 +213,17 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         uint256 weightedScaleSum;
         uint256 totalPtBal;
         for (uint256 i = 0; i < _zeros.length; i++) {
-            address zero = _zeros[i];
-            uint256 ptBal = IZero(zero).balanceOf(address(this));
+            IZero zero = IZero(_zeros[i]);
+            uint8 tDecimals = zero.decimals();
+            // zero bal is in terget token term
+            // normalized to 18 decimals
+            // uint256 ptBal = _normalize(zero.balanceOf(address(this), tDecimals));
+            uint256 ptBal = zero.balanceOf(address(this));
 
-            weightedScaleSum += (ptBal * series[zero].adapter.scale()) / 1e18;
+            weightedScaleSum += ptBal.fmul(series[address(zero)].adapter.scale(), 10**tDecimals);
             totalPtBal += ptBal;
         }
-        return (weightedScaleSum * 1e18) / totalPtBal;
+        return weightedScaleSum.fdiv(totalPtBal);
     }
 
     /// @dev only registered pools can burn
@@ -187,7 +234,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     }
 
     function transfer(address, uint256) public pure override(IERC20, ERC20) returns (bool) {
-        revert("nPT: virual, transfer disabled");
+        revert("nPT: transfer disabled");
     }
 
     function transferFrom(
@@ -195,7 +242,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         address,
         uint256
     ) public pure override(IERC20, ERC20) returns (bool) {
-        revert("nPT: virual, transferFrom disabled");
+        revert("nPT: transferFrom disabled");
     }
 
     function scale() external returns (uint256) {
@@ -203,7 +250,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     }
 
     /// @notice Mint Zeros and Claims of a specific protocol
-    /// @dev The balance of Zeros/Claims minted will be the same value in units of underlying (less fees)
+    /// @dev The balance of Zeros/Claims minted will be the same value in units of target (less fees)
     /// @param pt principal token address
     /// @param uAmount amount of underlying to deposit
     /// @return mintAmount amount of PT and YT minted
@@ -219,7 +266,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
 
     function _issueFromUnderlying(
         address _pt,
-        address recipient,
+        address _recipient,
         uint256 _uAmount
     ) internal returns (uint256 mintAmount) {
         Series memory _series = series[_pt];
@@ -227,14 +274,14 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         underlying.safeApprove(address(_series.adapter), _uAmount);
 
         uint256 tAmount = _series.adapter.wrapUnderlying(_uAmount);
-        mintAmount = _issue(_pt, _series, recipient, tAmount);
+        mintAmount = _issue(_pt, _series, _recipient, tAmount);
     }
 
     /// @notice Mint Zeros and Claims of a specific protocol
     /// @param pt principal token address
     /// @param tAmount amount of Target to deposit
     /// @return mintAmount amount of PT and YT minted
-    /// @dev The balance of Zeros/Claims minted will be the same value in units of underlying (less fees)
+    /// @dev The balance of Zeros/Claims minted will be the same value in units of target (less fees)
     function issue(address pt, uint256 tAmount) external nonReentrant notMatured returns (uint256 mintAmount) {
         Series memory _series = series[pt];
         IERC20(_series.adapter.getTarget()).safeTransferFrom(msg.sender, address(this), tAmount);
@@ -244,26 +291,16 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     function _issue(
         address _pt,
         Series memory _series,
-        address recipient,
+        address _recipient,
         uint256 _tAmount
     ) internal returns (uint256 mintAmount) {
         require(_series.claim != address(0), "Tranche: invalid pt");
 
-        IERC20Metadata target = IERC20Metadata(_series.adapter.getTarget());
-        uint256 tDecimals = target.decimals();
-        uint256 tBase = 10**tDecimals;
-        uint256 fee;
-
         // Take the issuance fee out of the deposited Target, and put it towards the settlement reward
-        uint256 issuanceFee = _series.adapter.getIssuanceFee();
-        require(issuanceFee <= ISSUANCE_FEE_CAP, "Tranche: issuance fee too high");
+        uint256 feePst = _series.adapter.getIssuanceFee(); // in WAD term
+        require(feePst <= ISSUANCE_FEE_CAP, "Tranche: issuance fee too high");
 
-        if (tDecimals != 18) {
-            uint256 base = (tDecimals < 18 ? issuanceFee / (10**(18 - tDecimals)) : issuanceFee * 10**(tDecimals - 18));
-            fee = base.fmul(_tAmount, tBase);
-        } else {
-            fee = issuanceFee.fmul(_tAmount, tBase);
-        }
+        uint256 fee = _tAmount.fmul(feePst);
 
         // update accrued fees
         series[_pt].reward += fee;
@@ -271,24 +308,24 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
 
         // If the caller has collected on Claims before, use the scale value from that collection to determine how many Zeros/Claims to mint
         // so that the Claims they mint here will have the same amount of yield stored up as their existing holdings
-        uint256 _scale = lscales[_pt][recipient];
+        uint256 _scale = lscales[_pt][_recipient];
 
         // If the caller has not collected on Claims before, use the current scale value to determine how many Zeros/Claims to mint
         // so that the Claims they mint here are "clean," in that they have no yet-to-be-collected yield
         if (_scale == 0) {
-            _scale = _series.adapter.scale();
-            lscales[_pt][recipient] = _scale;
+            _scale = _series.adapter.scale(); // NOTE: in WAD term
+            lscales[_pt][_recipient] = _scale;
         }
 
         // Determine the amount of Underlying equal to the Target being sent in (the principal)
         // the amount of Zeros/Claims to mint is the amount of Target deposited (sub fee), multipled by the last scale value
-        mintAmount = tAmountSubFee.fmul(_scale, tBase);
+        mintAmount = tAmountSubFee.fmul(_scale); // NOTE: in target token term
 
         // Mint equal amounts of Zeros and Claims
-        IZero(_pt).mint(recipient, mintAmount);
-        IClaim(_series.claim).mint(recipient, mintAmount);
+        IZero(_pt).mint(_recipient, mintAmount);
+        IClaim(_series.claim).mint(_recipient, mintAmount);
 
-        emit Issued(_pt, mintAmount, recipient);
+        emit Issued(_pt, mintAmount, _recipient);
     }
 
     /// @notice Reconstitute Target by burning Zeros and Claims
@@ -315,18 +352,58 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
 
     /// @notice Collect Claim excess before, at, or after maturity
     /// @dev If `to` is set, we copy the lscale value from usr to this address
-    /// @param usr User who's collecting for their Claims
-    /// @param pt principal token address
-    /// @param uBal claim balance
-    /// @param uAmountTransfer original transfer value
-    /// @param to address to set the lscale value from usr
+    /// @param _usr User who's collecting for their Claims
+    /// @param _pt principal token address
+    /// @param _uBal claim balance
+    /// @param _uAmountTransfer original transfer value
+    /// @param _to address to set the lscale value from usr
     function _collect(
-        address usr,
-        address pt,
-        uint256 uBal,
-        uint256 uAmountTransfer,
-        address to
+        address _usr,
+        address _pt,
+        uint256 _uBal,
+        uint256 _uAmountTransfer,
+        address _to
     ) internal returns (uint256 collected) {}
+
+    /// @dev to 18 point decimal
+    /// @param amount The amount of the token in native decimal encoding
+    /// @param decimals decimals of the token
+    function _normalize(uint256 amount, uint8 decimals) internal pure returns (uint256) {
+        // If we need to increase the decimals
+        if (decimals > 18) {
+            // Then we shift right the amount by the number of decimals
+            amount = amount / 10**(decimals - 18);
+            // If we need to decrease the number
+        } else if (decimals < 18) {
+            // then we shift left by the difference
+            amount = amount * 10**(18 - decimals);
+        }
+        // If nothing changed this is a no-op
+        return amount;
+    }
+
+    // / @dev Takes an 'amount' encoded with 'decimalsBefore' decimals and
+    // /      re encodes it with 'decimalsAfter' decimals
+    // / @param amount The amount to normalize
+    // / @param decimalsBefore The decimal encoding before
+    // / @param decimalsAfter The decimal encoding after
+    // function _normalize(
+    //     uint256 amount,
+    //     uint8 decimalsBefore,
+    //     uint8 decimalsAfter
+    // ) internal pure returns (uint256) {
+    //     // If we need to increase the decimals
+    //     if (decimalsBefore > decimalsAfter) {
+    //         // Then we shift right the amount by the number of decimals
+    //         amount = amount / 10**(decimalsBefore - decimalsAfter);
+    //         // If we need to decrease the number
+    //     } else if (decimalsBefore < decimalsAfter) {
+    //         // then we shift left by the difference
+    //         amount = amount * 10**(decimalsAfter - decimalsBefore);
+    //     }
+    //     // If nothing changed this is a no-op
+    //     return amount;
+    // }
 
     function getZeros() external view returns (address[] memory) {
         return _zeros;

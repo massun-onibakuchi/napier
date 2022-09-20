@@ -47,7 +47,7 @@ library FixedMath {
 
     /// XXX: fdiv(x, y, WAD) alias
     function fdiv(uint256 x, uint256 y) internal pure returns (uint256) {
-        return fmul(x, y, WAD); // Equivalent to (x * WAD) / y rounded down.
+        return fdiv(x, y, WAD); // Equivalent to (x * WAD) / y rounded down.
     }
 
     function fdivUp(

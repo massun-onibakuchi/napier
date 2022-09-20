@@ -18,11 +18,11 @@ import "./Token.sol";
 // For convenience
 /// @title Principal Token for each lending protocol
 /// @dev `Zero` means zero-coupon bond
-interface Zero is IToken {} // prettier-ignore
+interface IZero is IToken {} // prettier-ignore
 
 /// @title Yield Token for each lending protocol
 /// @dev `Claim` means Yield Token
-interface Claim is IToken {} // prettier-ignore
+interface IClaim is IToken {} // prettier-ignore
 
 /// @notice You can use this contract to issue, combine, and redeem Sense ERC20 Zeros and Claims
 /// @title Napier Principal Token interface
@@ -33,7 +33,7 @@ interface Claim is IToken {} // prettier-ignore
 ///      this would let LPers aggregate liquiditites and make a more profit.
 contract Tranche is ERC20, ReentrancyGuard, ITranche {
     using FixedMath for uint256;
-    using SafeERC20 for IERC20Metadata;
+    using SafeERC20 for IERC20;
 
     uint256 public constant ISSUANCE_FEE_CAP = 0.1e18; // 10% issuance fee cap
 
@@ -48,6 +48,8 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     address public immutable sponsor;
 
     INapierPoolFactory public immutable poolFactory;
+
+    address[] internal _zeros;
 
     /// @notice pt -> Series
     mapping(address => Series) internal series;
@@ -82,12 +84,14 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         for (uint256 i = 0; i < len; ) {
             require(_underlying == adapters[i].underlying(), "Tranche: underlying mismatch");
 
-            uint8 tDecimals = IERC20Metadata(adapters[i].getTarget()).decimals();
+            IERC20Metadata target = IERC20Metadata(adapters[i].getTarget());
+            uint8 tDecimals = target.decimals();
 
             address zero = address(new Token("Zero", "ZERO", tDecimals, address(this)));
             address claim = address(new Token("Claim", "CLAIM", tDecimals, address(this)));
             uint256 iscale = adapters[i].scale();
 
+            _zeros.push(zero);
             series[zero] = Series({
                 claim: claim,
                 adapter: adapters[i],
@@ -104,10 +108,75 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     }
 
     /// @dev only registered pools can mint
-    /// @param account The address to send the minted tokens
-    /// @param amount The amount to be minted
-    function mintNapierPT(address account, uint256 amount) external onlyPool notMatured {
-        _mint(account, amount);
+    /// @param pt The principal token address
+    /// @param uAmount deposit amount of underlying
+    /// @param uReserve underlying reserve
+    /// @param nptReserve NapierPT reserve
+    function mintNapierPT(
+        address pt,
+        uint256 uAmount,
+        uint256 uReserve,
+        uint256 nptReserve
+    )
+        external
+        onlyPool
+        notMatured
+        nonReentrant
+        returns (
+            uint256 uAmountUse,
+            uint256 ptAmount,
+            uint256 nptAmount
+        )
+    {
+        underlying.safeTransferFrom(msg.sender, address(this), uAmount);
+
+        (uAmountUse, nptAmount) = _computeNptToMint(pt, uAmount, uReserve, nptReserve);
+
+        if (uAmountUse != 0) {
+            // mint pt
+            ptAmount = _issueFromUnderlying(pt, msg.sender, uAmountUse);
+        }
+
+        // mint nPT
+        _mint(msg.sender, nptAmount);
+    }
+
+    /// @param pt address
+    /// @param uAmount underlying amount
+    /// @param uReserve underlying reserve
+    /// @param nptReserve NapierPricipalToken reserve
+    /// @return uAmountUse underlying amount used
+    /// @return nptAmount underlying amount used
+    function _computeNptToMint(
+        address pt,
+        uint256 uAmount,
+        uint256 uReserve,
+        uint256 nptReserve
+    ) internal returns (uint256 uAmountUse, uint256 nptAmount) {
+        // We do not add Principal Token liquidity if it haven't been initialized yet
+        if (nptReserve != 0) {
+            // uAmount * nptReserve / (nptScale * uReserve * (1 - feePst) + nptReserve)
+            uint256 feePst = series[pt].adapter.getIssuanceFee();
+            uint256 nptScale = _nptScale();
+            uAmountUse = uAmount.fmul(
+                nptReserve.fdiv(nptScale.fmul(uReserve).fmul(FixedMath.WAD - feePst) + nptReserve)
+            );
+            nptAmount = uAmountUse.fmul(nptScale);
+        }
+    }
+
+    function _nptScale() internal returns (uint256) {
+        // TODO: gas optimization
+        uint256 weightedScaleSum;
+        uint256 totalPtBal;
+        for (uint256 i = 0; i < _zeros.length; i++) {
+            address zero = _zeros[i];
+            uint256 ptBal = IZero(zero).balanceOf(address(this));
+
+            weightedScaleSum += (ptBal * series[zero].adapter.scale()) / 1e18;
+            totalPtBal += ptBal;
+        }
+        return (weightedScaleSum * 1e18) / totalPtBal;
     }
 
     /// @dev only registered pools can burn
@@ -117,15 +186,67 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         _burn(account, amount);
     }
 
-    function scale() public {}
+    function transfer(address, uint256) public pure override(IERC20, ERC20) returns (bool) {
+        revert("nPT: virual, transfer disabled");
+    }
+
+    function transferFrom(
+        address,
+        address,
+        uint256
+    ) public pure override(IERC20, ERC20) returns (bool) {
+        revert("nPT: virual, transferFrom disabled");
+    }
+
+    function scale() external returns (uint256) {
+        return _nptScale();
+    }
+
+    /// @notice Mint Zeros and Claims of a specific protocol
+    /// @dev The balance of Zeros/Claims minted will be the same value in units of underlying (less fees)
+    /// @param pt principal token address
+    /// @param uAmount amount of underlying to deposit
+    /// @return mintAmount amount of PT and YT minted
+    function issueFromUnderlying(address pt, uint256 uAmount)
+        external
+        nonReentrant
+        notMatured
+        returns (uint256 mintAmount)
+    {
+        underlying.safeTransferFrom(msg.sender, address(this), uAmount);
+        mintAmount = _issueFromUnderlying(pt, msg.sender, uAmount);
+    }
+
+    function _issueFromUnderlying(
+        address _pt,
+        address recipient,
+        uint256 _uAmount
+    ) internal returns (uint256 mintAmount) {
+        Series memory _series = series[_pt];
+
+        underlying.safeApprove(address(_series.adapter), _uAmount);
+
+        uint256 tAmount = _series.adapter.wrapUnderlying(_uAmount);
+        mintAmount = _issue(_pt, _series, recipient, tAmount);
+    }
 
     /// @notice Mint Zeros and Claims of a specific protocol
     /// @param pt principal token address
     /// @param tAmount amount of Target to deposit
+    /// @return mintAmount amount of PT and YT minted
     /// @dev The balance of Zeros/Claims minted will be the same value in units of underlying (less fees)
-    function issue(address pt, uint256 tAmount) external nonReentrant notMatured returns (uint256 uAmount) {
+    function issue(address pt, uint256 tAmount) external nonReentrant notMatured returns (uint256 mintAmount) {
         Series memory _series = series[pt];
+        IERC20(_series.adapter.getTarget()).safeTransferFrom(msg.sender, address(this), tAmount);
+        mintAmount = _issue(pt, _series, msg.sender, tAmount);
+    }
 
+    function _issue(
+        address _pt,
+        Series memory _series,
+        address recipient,
+        uint256 _tAmount
+    ) internal returns (uint256 mintAmount) {
         require(_series.claim != address(0), "Tranche: invalid pt");
 
         IERC20Metadata target = IERC20Metadata(_series.adapter.getTarget());
@@ -139,39 +260,35 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
 
         if (tDecimals != 18) {
             uint256 base = (tDecimals < 18 ? issuanceFee / (10**(18 - tDecimals)) : issuanceFee * 10**(tDecimals - 18));
-            fee = base.fmul(tAmount, tBase);
+            fee = base.fmul(_tAmount, tBase);
         } else {
-            fee = issuanceFee.fmul(tAmount, tBase);
+            fee = issuanceFee.fmul(_tAmount, tBase);
         }
 
         // update accrued fees
-        series[pt].reward += fee;
-        uint256 tAmountSubFee = tAmount - fee;
-
-        target.safeTransferFrom(msg.sender, address(this), tAmount);
-        // target.safeTransferFrom(msg.sender, address(_series.adapter), tAmountSubFee);
-        // target.safeTransferFrom(msg.sender, address(_series.adapter), fee);
+        series[_pt].reward += fee;
+        uint256 tAmountSubFee = _tAmount - fee;
 
         // If the caller has collected on Claims before, use the scale value from that collection to determine how many Zeros/Claims to mint
         // so that the Claims they mint here will have the same amount of yield stored up as their existing holdings
-        uint256 _scale = lscales[pt][msg.sender];
+        uint256 _scale = lscales[_pt][recipient];
 
         // If the caller has not collected on Claims before, use the current scale value to determine how many Zeros/Claims to mint
         // so that the Claims they mint here are "clean," in that they have no yet-to-be-collected yield
         if (_scale == 0) {
             _scale = _series.adapter.scale();
-            lscales[pt][msg.sender] = _scale;
+            lscales[_pt][recipient] = _scale;
         }
 
         // Determine the amount of Underlying equal to the Target being sent in (the principal)
         // the amount of Zeros/Claims to mint is the amount of Target deposited (sub fee), multipled by the last scale value
-        uAmount = tAmountSubFee.fmul(_scale, tBase);
+        mintAmount = tAmountSubFee.fmul(_scale, tBase);
 
         // Mint equal amounts of Zeros and Claims
-        Zero(pt).mint(msg.sender, uAmount);
-        Claim(_series.claim).mint(msg.sender, uAmount);
+        IZero(_pt).mint(recipient, mintAmount);
+        IClaim(_series.claim).mint(recipient, mintAmount);
 
-        emit Issued(pt, uAmount, msg.sender);
+        emit Issued(_pt, mintAmount, recipient);
     }
 
     /// @notice Reconstitute Target by burning Zeros and Claims
@@ -192,7 +309,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         uint256 uAmountTransfer,
         address to
     ) external nonReentrant returns (uint256 collected) {
-        uint256 uBal = Claim(series[pt].claim).balanceOf(usr);
+        uint256 uBal = IClaim(series[pt].claim).balanceOf(usr);
         return _collect(usr, pt, uBal, uAmountTransfer > 0 ? uAmountTransfer : uBal, to);
     }
 
@@ -210,6 +327,10 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         uint256 uAmountTransfer,
         address to
     ) internal returns (uint256 collected) {}
+
+    function getZeros() external view returns (address[] memory) {
+        return _zeros;
+    }
 
     function getSeries(address pt) external view returns (Series memory) {
         return series[pt];

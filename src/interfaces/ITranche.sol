@@ -34,13 +34,28 @@ interface ITranche is IERC20Metadata {
 
     function underlying() external returns (IERC20);
 
+    function getZeros() external view returns (address[] memory);
+
     function getSeries(address) external view returns (Series memory);
 
     /// @notice mint NapierPT
     /// @dev only registered pools can mint
-    /// @param account The address to send the minted tokens
-    /// @param amount The amount to be minted
-    function mintNapierPT(address account, uint256 amount) external;
+    /// @param pt The principal token address
+    /// @param uAmount deposit amount of underlying
+    /// @param uReserve underlying reserve
+    /// @param nptReserve NapierPT reserve
+    function mintNapierPT(
+        address pt,
+        uint256 uAmount,
+        uint256 uReserve,
+        uint256 nptReserve
+    )
+        external
+        returns (
+            uint256 uAmountUse,
+            uint256 ptAmount,
+            uint256 nptAmount
+        );
 
     /// @notice burn NapierPT
     /// @dev only registered pools can burn
@@ -49,13 +64,20 @@ interface ITranche is IERC20Metadata {
     function burnNapierPT(address account, uint256 amount) external;
 
     /// @notice nPT scale which is calculated based on several PT scales
-    function scale() external;
+    function scale() external returns (uint256);
 
     /// @notice Mint Zeros and Claims of a specific protocol
+    /// @dev The balance of Zeros/Claims minted will be the same value in units of underlying (less fees)
+    /// @param pt principal token address
+    /// @param uAmount amount of underlying to deposit
+    /// @return mintAmount amount of PT and YT minted
+    function issueFromUnderlying(address pt, uint256 uAmount) external returns (uint256 mintAmount);
+
+    /// @notice Mint Zeros and Claims of a specific protocol
+    /// @dev The balance of Zeros/Claims minted will be the same value in units of underlying (less fees)
     /// @param pt principal token address
     /// @param tAmount amount of Target to deposit
-    /// @dev The balance of Zeros/Claims minted will be the same value in units of underlying (less fees)
-    function issue(address pt, uint256 tAmount) external returns (uint256 uAmount);
+    function issue(address pt, uint256 tAmount) external returns (uint256 mintAmount);
 
     /// @notice Reconstitute Target by burning Zeros and Claims
     /// @dev Explicitly burns claims before maturity, and implicitly does it at/after maturity through `_collect()`

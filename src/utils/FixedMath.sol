@@ -1,7 +1,7 @@
 pragma solidity 0.8.10;
 
 /// @title Fixed point arithmetic library
-/// @author Taken from https://github.com/yieldprotocol/yield-utils-v2/blob/main/contracts/math/WDiv.sol & https://github.com/yieldprotocol/yield-utils-v2/blob/main/contracts/math/WMul.sol
+/// @author Modified from https://github.com/yieldprotocol/yield-utils-v2/blob/main/contracts/math/WDiv.sol & https://github.com/yieldprotocol/yield-utils-v2/blob/main/contracts/math/WMul.sol
 library FixedMath {
     uint256 internal constant WAD = 1e18;
     uint256 internal constant RAY = 1e27;
@@ -17,6 +17,11 @@ library FixedMath {
         unchecked {
             z /= baseUnit;
         }
+    }
+
+    /// XXX: fmul(x, y, WAD) alias
+    function fmul(uint256 x, uint256 y) internal pure returns (uint256) {
+        return fmul(x, y, WAD); // Equivalent to (x * y) / WAD rounded down.
     }
 
     function fmulUp(
@@ -38,6 +43,11 @@ library FixedMath {
         uint256 baseUnit
     ) internal pure returns (uint256 z) {
         z = (x * baseUnit) / y;
+    }
+
+    /// XXX: fdiv(x, y, WAD) alias
+    function fdiv(uint256 x, uint256 y) internal pure returns (uint256) {
+        return fmul(x, y, WAD); // Equivalent to (x * WAD) / y rounded down.
     }
 
     function fdivUp(

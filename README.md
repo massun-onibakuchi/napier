@@ -1,4 +1,4 @@
-# Napier Finance 
+# Napier Finance - Yield Stripping app featuring the most efficient AMM
 
 NOTE: This code is not audited and should not be used in production environment.
 The repository is under continuous development. 

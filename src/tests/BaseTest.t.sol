@@ -19,6 +19,7 @@ abstract contract BaseTest is Test {
     uint256 internal constant DELTA = 150;
     uint256 internal constant MIN_MATURITY = 2 weeks;
     uint256 internal constant MAX_MATURITY = 14 weeks;
+    uint256 internal constant WAD = 1e18;
 
     uint8 internal U_DECIMALS;
     uint256 internal U_BASE;
@@ -28,6 +29,7 @@ abstract contract BaseTest is Test {
     Tranche internal tranche;
     address[] internal zeros;
     ITranche.Series[] internal series;
+    Adapter[] internal adapters;
 
     uint256 internal maturity;
     uint256 internal feePst;
@@ -49,7 +51,6 @@ abstract contract BaseTest is Test {
         U_DECIMALS = IERC20Metadata(underlying).decimals();
         U_BASE = 10**U_DECIMALS;
 
-        assertTrue(series.length == zeros.length, "setup: zeros and series length mismatch");
         for (uint256 i = 0; i < zeros.length; i++) {
             ITranche.Series memory _series = tranche.getSeries(zeros[i]);
             series.push(_series);
@@ -62,6 +63,7 @@ abstract contract BaseTest is Test {
             // fund
             deal(address(target), address(this), 1000 * target.decimals(), true);
         }
+        assertTrue(series.length == zeros.length, "setup: zeros and series length mismatch");
 
         // label
         vm.label(address(underlying), "underlying");
@@ -88,26 +90,13 @@ abstract contract BaseTest is Test {
     function _setupAfter() internal virtual {}
 
     function _fund() internal virtual {
-        deal(underlying, address(this), 1000 * U_BASE, true);
+        deal(underlying, address(this), amount, true);
     }
 
     function testConstructorParams() public virtual {
         assertEq(address(tranche.underlying()), underlying);
         assertEq(tranche.maturity(), maturity);
         assertEq(tranche.issuance(), block.timestamp);
-        assertEq(address(tranche.poolFactory()), address(this));
-    }
-
-    function testMintNapierPT() external virtual {}
-
-    function testBurnNapierPT() external virtual {}
-
-    function testCantTransferNapierPT() external {
-        vm.expectRevert("nPT: transfer disabled");
-        tranche.transfer(address(1), 1);
-
-        vm.expectRevert("nPT: transferFrom disabled");
-        tranche.transferFrom(address(1), address(2), 1);
     }
 
     /// @dev Takes an 'amount' encoded with 'decimalsBefore' decimals and

@@ -15,6 +15,8 @@ import "../interfaces/INapierPoolFactory.sol";
 import {BaseAdapter as Adapter} from "../adapters/BaseAdapter.sol";
 import "./Token.sol";
 
+import "forge-std/console.sol";
+
 // For convenience
 /// @title Principal Token for each lending protocol
 /// @dev `Zero` means zero-coupon bond
@@ -167,16 +169,14 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
             uint256 nptAmount
         )
     {
-        underlying.safeTransferFrom(msg.sender, address(this), uAmount);
-
         (uAmountUse, nptAmount) = _computeNptToMint(pt, uAmount, uReserve, nptReserve);
         if (uAmountUse != 0) {
             // mint pt
-            ptAmount = _issueFromUnderlying(pt, msg.sender, uAmountUse);
+            underlying.safeTransferFrom(msg.sender, address(this), uAmountUse);
+            ptAmount = _issueFromUnderlying(pt, address(this), uAmountUse);
+            // mint nPT
+            _mint(msg.sender, nptAmount);
         }
-
-        // mint nPT
-        _mint(msg.sender, nptAmount);
     }
 
     /// @param _pt address
@@ -210,17 +210,23 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         uint256 len = _zeros.length;
         uint256 weightedScaleSum;
         uint256 totalPtBal;
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ) {
             IZero zero = IZero(_zeros[i]);
-            uint8 tDecimals = zero.decimals();
             // zero bal is in terget token term
             // normalized to 18 decimals
-            uint256 ptBal = _normalize(zero.balanceOf(address(this)), tDecimals); // in WAD
+            uint256 ptBal = _normalize(zero.balanceOf(address(this)), zero.decimals()); // in WAD
 
+            console.log("ptBal :>>", ptBal);
             weightedScaleSum += ptBal.fmul(series[address(zero)].adapter.scale()); // in WAD
             totalPtBal += ptBal;
+            console.log("weightedScaleSum :>>", weightedScaleSum);
+            console.log("totalPtBal :>>", totalPtBal);
+            unchecked {
+                i++;
+            }
         }
-        return weightedScaleSum.fdiv(totalPtBal);
+        console.log("weightedScaleSum.fdiv(totalPtBal) :>>", weightedScaleSum.fdiv(totalPtBal));
+        return (totalPtBal != 0) ? weightedScaleSum.fdiv(totalPtBal) : FixedMath.WAD;
     }
 
     /// @dev only registered pools can burn
@@ -378,29 +384,6 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         // If nothing changed this is a no-op
         return amount;
     }
-
-    // / @dev Takes an 'amount' encoded with 'decimalsBefore' decimals and
-    // /      re encodes it with 'decimalsAfter' decimals
-    // / @param amount The amount to normalize
-    // / @param decimalsBefore The decimal encoding before
-    // / @param decimalsAfter The decimal encoding after
-    // function _normalize(
-    //     uint256 amount,
-    //     uint8 decimalsBefore,
-    //     uint8 decimalsAfter
-    // ) internal pure returns (uint256) {
-    //     // If we need to increase the decimals
-    //     if (decimalsBefore > decimalsAfter) {
-    //         // Then we shift right the amount by the number of decimals
-    //         amount = amount / 10**(decimalsBefore - decimalsAfter);
-    //         // If we need to decrease the number
-    //     } else if (decimalsBefore < decimalsAfter) {
-    //         // then we shift left by the difference
-    //         amount = amount * 10**(decimalsAfter - decimalsBefore);
-    //     }
-    //     // If nothing changed this is a no-op
-    //     return amount;
-    // }
 
     function getZeros() external view returns (address[] memory) {
         return _zeros;

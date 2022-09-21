@@ -16,6 +16,10 @@ abstract contract BaseAdapter {
 
     AdapterParams public adapterParams;
 
+    uint8 public immutable uDecimals;
+
+    uint8 public immutable tDecimals;
+
     struct AdapterParams {
         address underlying; // underlying token
         address target; // Target token
@@ -40,6 +44,9 @@ abstract contract BaseAdapter {
 
         name = string(abi.encodePacked(IERC20Metadata(_adapterParams.target).name(), " Adapter"));
         symbol = string(abi.encodePacked(IERC20Metadata(_adapterParams.target).symbol(), "-adapter"));
+
+        uDecimals = IERC20Metadata(_adapterParams.underlying).decimals();
+        tDecimals = IERC20Metadata(_adapterParams.target).decimals();
     }
 
     /// @notice Calculate and return this adapter's Scale value for the current timestamp

@@ -38,39 +38,34 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
     address public immutable governance;
 
     // The percent of each trade's implied yield to collect as LP fee
-    uint256 public immutable percentFee;
+    uint256 public percentFee;
 
     // The percent of LP fees that is payed to governance
-    uint256 public immutable percentFeeGov;
+    uint256 public percentFeeGov;
 
     uint256 internal _uReserve;
 
     uint256 internal _nptReserve;
 
-    // TODO: token name and symbol
-    // TODO: deploy tranche with CREATE2 from factory, init with callback instead of constructor
-    // ref: Element finance and Uniswap V3
-    constructor(
-        IERC20Metadata _underlying,
-        ITranche _nPT,
-        uint256 _maturity,
-        uint256 _percentFee,
-        uint256 _percentFeeGov,
-        address _governance,
-        string memory name,
-        string memory symbol
-    ) ERC20("Napier Pool LP Token", "Napier LPT") {
-        underlying = _underlying;
-        nPT = _nPT;
-        underlyingDecimals = _underlying.decimals();
-        nptDecimals = _nPT.decimals();
-
-        require(_maturity > block.timestamp, "NapierPool: Maturity in the past");
-        maturity = _maturity;
-        percentFee = _percentFee;
-        percentFeeGov = _percentFeeGov;
-        governance = _governance;
+    constructor() ERC20("Napier Pool", "nLP") {
         factory = INapierPoolFactory(msg.sender);
+
+        (uint256 _maturity, address _underlying, address _npt, address _governance) = factory.getData();
+
+        maturity = _maturity;
+        underlying = IERC20Metadata(_underlying);
+        nPT = ITranche(_npt);
+        underlyingDecimals = IERC20Metadata(_underlying).decimals();
+        nptDecimals = ITranche(_npt).decimals();
+        governance = _governance;
+    }
+
+    function name() public view override returns (string memory) {
+        return string(abi.encodePacked("Napier Pool", underlying.symbol(), "/", nPT.symbol()));
+    }
+
+    function symbol() public view override returns (string memory) {
+        return string(abi.encodePacked("nLP-", underlying.symbol(), "/", nPT.symbol()));
     }
 
     function mint(address pt, address recipient) external nonReentrant notMatured returns (uint256 liquidity) {

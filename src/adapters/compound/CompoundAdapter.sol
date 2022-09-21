@@ -19,15 +19,10 @@ contract CompoundAdapter is BaseAdapter {
     address public constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address public constant CETH = 0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5;
 
-    uint8 private immutable uDecimals;
-
     receive() external payable {}
 
     constructor(AdapterParams memory _adapterParams) BaseAdapter(_adapterParams) {
-        IERC20Metadata _underlying = IERC20Metadata(_adapterParams.underlying);
-
-        uDecimals = _underlying.decimals();
-        _underlying.safeApprove(_adapterParams.target, type(uint256).max);
+        IERC20Metadata(_adapterParams.underlying).safeApprove(_adapterParams.target, type(uint256).max);
     }
 
     /// @inheritdoc BaseAdapter

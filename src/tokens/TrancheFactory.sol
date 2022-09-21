@@ -11,7 +11,7 @@ contract TrancheFactory {
 
     function createTranche(
         address _underlying,
-        Adapter[] memory adapters,
+        Adapter[] memory _adapters,
         uint256 _maturity
     ) external returns (ITranche tranche) {
         // TODO

@@ -170,7 +170,6 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         underlying.safeTransferFrom(msg.sender, address(this), uAmount);
 
         (uAmountUse, nptAmount) = _computeNptToMint(pt, uAmount, uReserve, nptReserve);
-
         if (uAmountUse != 0) {
             // mint pt
             ptAmount = _issueFromUnderlying(pt, msg.sender, uAmountUse);
@@ -185,7 +184,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     /// @param _uReserve underlying reserve
     /// @param _nptReserve NapierPricipalToken reserve
     /// @return uAmountUse underlying amount used
-    /// @return nptAmount underlying amount used
+    /// @return nptAmount npt amount to be minted
     function _computeNptToMint(
         address _pt,
         uint256 _uAmount,
@@ -216,9 +215,9 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
             uint8 tDecimals = zero.decimals();
             // zero bal is in terget token term
             // normalized to 18 decimals
-            uint256 ptBal = _normalize(zero.balanceOf(address(this)), tDecimals);
+            uint256 ptBal = _normalize(zero.balanceOf(address(this)), tDecimals); // in WAD
 
-            weightedScaleSum += ptBal.fmul(series[address(zero)].adapter.scale());
+            weightedScaleSum += ptBal.fmul(series[address(zero)].adapter.scale()); // in WAD
             totalPtBal += ptBal;
         }
         return weightedScaleSum.fdiv(totalPtBal);

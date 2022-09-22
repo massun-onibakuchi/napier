@@ -2,14 +2,13 @@
 pragma solidity ^0.8.10;
 
 interface INapierRouter {
-    function addLiquidityFromUnderlying(
-        address nPT,
-        address recipient,
-        uint256 amountIn,
-        uint256 minLpTokenOut,
-        uint256 deadline
-    ) external returns (uint256);
-
+    // function addLiquidityFromUnderlying(
+    //     address nPT,
+    //     address recipient,
+    //     uint256 amountIn,
+    //     uint256 minLpTokenOut,
+    //     uint256 deadline
+    // ) external returns (uint256);
     // TODO
     // function removeLiquidity(
     //     address nPT,
@@ -17,7 +16,6 @@ interface INapierRouter {
     //     uint256 amountIn,
     //     uint256 deadline,
     // ) external returns (uint256);
-
     // TODO
     // function swap(
     //     address nPT,

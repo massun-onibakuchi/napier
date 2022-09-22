@@ -165,7 +165,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         nonReentrant
         returns (
             uint256 uAmountUse,
-            uint256 ptAmount,
+            uint256 mintAmount,
             uint256 nptAmount
         )
     {
@@ -173,9 +173,12 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         if (uAmountUse != 0) {
             // mint pt
             underlying.safeTransferFrom(msg.sender, address(this), uAmountUse);
-            ptAmount = _issueFromUnderlying(pt, address(this), uAmountUse);
+            mintAmount = _issueFromUnderlying(pt, address(this), uAmountUse);
+
             // mint nPT
             _mint(msg.sender, nptAmount);
+            // transfer yt
+            IClaim(series[pt].claim).transfer(msg.sender, mintAmount);
         }
     }
 
@@ -211,21 +214,20 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         uint256 weightedScaleSum;
         uint256 totalPtBal;
         for (uint256 i = 0; i < len; ) {
-            IZero zero = IZero(_zeros[i]);
-            // zero bal is in terget token term
+            Series memory _series = series[_zeros[i]];
+            // TODO: napier math
             // normalized to 18 decimals
-            uint256 ptBal = _normalize(zero.balanceOf(address(this)), zero.decimals()); // in WAD
+            uint256 ptBal = _normalize(
+                IERC20(_series.adapter.getTarget()).balanceOf(address(this)),
+                _series.adapter.tDecimals()
+            ); // in WAD
 
-            console.log("ptBal :>>", ptBal);
-            weightedScaleSum += ptBal.fmul(series[address(zero)].adapter.scale()); // in WAD
+            weightedScaleSum += ptBal.fmul(_series.adapter.scale()); // in WAD
             totalPtBal += ptBal;
-            console.log("weightedScaleSum :>>", weightedScaleSum);
-            console.log("totalPtBal :>>", totalPtBal);
             unchecked {
                 i++;
             }
         }
-        console.log("weightedScaleSum.fdiv(totalPtBal) :>>", weightedScaleSum.fdiv(totalPtBal));
         return (totalPtBal != 0) ? weightedScaleSum.fdiv(totalPtBal) : FixedMath.WAD;
     }
 

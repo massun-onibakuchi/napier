@@ -80,7 +80,6 @@ contract TestTranche is BaseTest {
         ); // add some pt to tranche to compensate for npt reserve
 
         uint256 nptScale = tranche.scale();
-        console.log("nptScale :>>", nptScale);
 
         // _uAmount * _nptReserve / (nptScale * _uReserve * (1 - feePst) + _nptReserve)
         uint256 expectedNptBal = (amount * nptReserve) /

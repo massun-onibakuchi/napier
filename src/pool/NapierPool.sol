@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "../interfaces/INapierPool.sol";
+import {IToken as IClaim} from "../interfaces/IToken.sol";
 
 import "../utils/FixedPoint.sol";
 import "../utils/FixedMath.sol";
@@ -58,6 +59,8 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
         underlyingDecimals = IERC20Metadata(_underlying).decimals();
         nptDecimals = ITranche(_npt).decimals();
         governance = _governance;
+
+        underlying.safeApprove(_npt, type(uint256).max);
     }
 
     function name() public view override returns (string memory) {
@@ -78,13 +81,13 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
         uint256 amountIn,
         uint256 minLiquidity,
         uint256 deadline
-    ) external returns (uint256 liquidity) {
-        require(deadline >= block.timestamp, "NapierRouter: expired");
+    ) external notMatured returns (uint256 liquidity) {
+        require(deadline >= block.timestamp, "pool: expired");
 
         IERC20Metadata(underlying).safeTransferFrom(msg.sender, address(this), amountIn);
-        liquidity = _mintFromUnderlying(pt, recipient);
+        liquidity = _mintFromUnderlying(pt, amountIn, recipient);
 
-        require(liquidity >= minLiquidity, "NapierRouter: min liquidity");
+        require(liquidity >= minLiquidity, "pool: min liquidity");
     }
 
     function removeLiquidity(
@@ -94,60 +97,38 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
         uint256 minPtOut,
         uint256 deadline
     ) external returns (uint256 liquidity) {
-        require(deadline >= block.timestamp, "NapierRouter: expired");
+        require(deadline >= block.timestamp, "pool: expired");
         // TODO
     }
 
     /// @param pt The Principal Token of a lending protocol
+    /// @param amountIn The amount of underlying to deposit
     /// @param recipient The address to receive the minted liquidity token
-    function _mintFromUnderlying(address pt, address recipient)
-        internal
-        nonReentrant
-        notMatured
-        returns (uint256 liquidity)
-    {
+    function _mintFromUnderlying(
+        address pt,
+        uint256 amountIn,
+        address recipient
+    ) internal nonReentrant returns (uint256 liquidity) {
         (uint256 uReserve, uint256 nptReserve) = getReserves();
-        uint256 uBal = underlying.balanceOf(address(this));
-        uint256 uAmount = uBal - uReserve;
 
         // mint pt and nPT
-        underlying.safeApprove(address(nPT), uAmount);
-        (uint256 uAmountUsed, , uint256 nptAmountIn) = nPT.mintNapierPT(pt, uAmount, uReserve, nptReserve);
+        (uint256 uAmountUsed, uint256 mintAmount, uint256 nptAmountIn) = nPT.mintNapierPT(
+            pt,
+            amountIn,
+            uReserve,
+            nptReserve
+        );
 
-        uint256 uAmountIn = uAmount - uAmountUsed;
-        // add liquidity
+        uint256 uAmountIn = amountIn - uAmountUsed;
+        // add reserve
         _nptReserve += nptAmountIn;
         _uReserve += uAmountIn;
 
+        // mint Lp token
         (liquidity, , ) = _mintLP(uAmountIn, nptAmountIn, uReserve, nptReserve, recipient);
+
+        IClaim(nPT.getSeries(pt).claim).transfer(recipient, mintAmount);
     }
-
-    // /// @param pt The Principal Token of a lending protocol
-    // /// @param uAmount amount of underlying
-    // /// @param recipient The address to receive the minted liquidity token
-    // function mintFromUnderlying(
-    //     address pt,
-    //     uint256 uAmount,
-    //     address recipient
-    // ) external nonReentrant notMatured returns (uint256 liquidity) {
-    //     (uint256 uReserve, uint256 nptReserve) = getReserves();
-    //     uint256 nptBal = nPT.balanceOf(address(this));
-    //     uint256 amountUnderlying = uBal - uReserve;
-
-    //     uint256 uAmount = uBal - uReserve;
-    //     underlying.safeTransferFrom(msg.sender, address(this), uAmount);
-
-    //     // mint pt and nPT
-    //     underlying.safeApprove(address(nPT), uAmount);
-    //     (uint256 uAmountUsed, , uint256 nptAmountIn) = nPT.mintNapierPT(pt, uAmount, uReserve, nptReserve);
-
-    //     uint256 uAmountIn = uAmount - uAmountUsed;
-    //     // add liquidity
-    //     _nptReserve += nptAmountIn;
-    //     _uReserve += uAmountIn;
-
-    //     (liquidity, , ) = _mintLP(uAmountIn, nptAmountIn, uReserve, nptReserve, recipient);
-    // }
 
     /// @dev Mints the maximum possible LP given a set of max inputs
     /// @param uAmountIn The max underlying to deposit

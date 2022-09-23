@@ -174,7 +174,6 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
             // mint pt
             underlying.safeTransferFrom(msg.sender, address(this), uAmountUse);
             mintAmount = _issueFromUnderlying(pt, address(this), uAmountUse);
-
             // mint nPT
             _mint(msg.sender, nptAmount);
             // transfer yt
@@ -215,7 +214,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         uint256 totalPtBal;
         for (uint256 i = 0; i < len; ) {
             Series memory _series = series[_zeros[i]];
-            // TODO: napier math
+            // TODO:BUG napier math
             // normalized to 18 decimals
             uint256 ptBal = _normalize(
                 IERC20(_series.adapter.getTarget()).balanceOf(address(this)),
@@ -370,6 +369,14 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         address _to
     ) internal returns (uint256 collected) {}
 
+    function getZeros() external view returns (address[] memory) {
+        return _zeros;
+    }
+
+    function getSeries(address pt) external view returns (Series memory) {
+        return series[pt];
+    }
+
     /// @dev to 18 point decimal
     /// @param amount The amount of the token in native decimal encoding
     /// @param decimals decimals of the token
@@ -385,14 +392,6 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         }
         // If nothing changed this is a no-op
         return amount;
-    }
-
-    function getZeros() external view returns (address[] memory) {
-        return _zeros;
-    }
-
-    function getSeries(address pt) external view returns (Series memory) {
-        return series[pt];
     }
 
     modifier onlyPool() {

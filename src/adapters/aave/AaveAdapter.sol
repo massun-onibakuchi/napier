@@ -84,13 +84,15 @@ contract AaveAdapter is BaseAdapter {
     /// @param decimals decimals of the token
     function _normalize(uint256 amount, uint8 decimals) internal pure returns (uint256) {
         // If we need to increase the decimals
-        if (decimals >= 18) {
+        if (decimals > 18) {
             // Then we shift right the amount by the number of decimals
             amount = amount / 10**(decimals - 18);
             // If we need to decrease the number
-        } else {
+        } else if (decimals < 18) {
             // then we shift left by the difference
             amount = amount * 10**(18 - decimals);
+        } else if (decimals == 18) {
+            amount = amount * 10**18;
         }
         // If nothing changed this is a no-op
         return amount;

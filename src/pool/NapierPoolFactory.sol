@@ -13,6 +13,8 @@ contract NapierPoolFactory is INapierPoolFactory {
     address internal _tempNpt;
     uint256 internal _tempMaturity;
 
+    bytes32 public constant POOL_CREATION_HASH = keccak256(type(NapierPool).creationCode);
+
     event PoolCreated(address indexed underlying, address indexed tranche);
 
     constructor(address _governance) {
@@ -42,7 +44,7 @@ contract NapierPoolFactory is INapierPoolFactory {
         return pool;
     }
 
-    // @notice Callback function called by the Pool.
+    /// @notice Callback function called by the Pool.
     /// @dev This is called by the Pool contract constructor.
     /// The return data is used for Pool initialization. Using this, the Pool avoids
     /// constructor arguments which can make the Pool bytecode needed for create2 address
@@ -62,5 +64,10 @@ contract NapierPoolFactory is INapierPoolFactory {
 
     function isRegisteredPool(address pool) external view returns (bool) {
         return _isPoolRegistered[pool];
+    }
+
+    function poolFor(address underlying, address npt) public view returns (address pool) {
+        bytes32 salt = keccak256(abi.encodePacked(underlying, npt));
+        pool = address(uint160(uint256(keccak256(abi.encodePacked(hex"ff", address(this), salt, POOL_CREATION_HASH)))));
     }
 }

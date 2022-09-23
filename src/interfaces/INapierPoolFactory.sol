@@ -13,4 +13,6 @@ interface INapierPoolFactory {
             address,
             address
         );
+
+    function createPool(address underlying, address nPT) external returns (address);
 }

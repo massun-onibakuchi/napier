@@ -16,6 +16,8 @@ contract AaveAdapter is BaseAdapter {
 
     constructor(AdapterParams memory _adapterParams) BaseAdapter(_adapterParams) {}
 
+    function scaleStored() external view override returns (uint256) {}
+
     /// @inheritdoc BaseAdapter
     /// @notice 1:1 exchange rate
     function _scale() internal override returns (uint256) {}

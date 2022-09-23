@@ -15,19 +15,27 @@ interface INapierPool {
 
     function nPT() external returns (ITranche);
 
-    /// @param pt The Principal Token of a lending protocol
-    /// @param recipient The address to receive the minted liquidity token
-    function mint(address pt, address recipient) external returns (uint256 liquidity);
+    function addLiquidityFromUnderlying(
+        address pt,
+        address recipient,
+        uint256 amountIn,
+        uint256 minLiquidity,
+        uint256 deadline
+    ) external returns (uint256 liquidity);
 
-    /// @param pt The Principal Token of a lending protocol
-    /// @param recipient The address to receive assets
-    function burn(address pt, address recipient) external returns (uint256 amountUnderunderlying, uint256 amountNPt);
+    function removeLiquidity(
+        address pt,
+        address recipient,
+        uint256 minUnderlyingOut,
+        uint256 minPtOut,
+        uint256 deadline
+    ) external returns (uint256 liquidity);
 
     // TODO
     // function swap(
     //     uint256 amountUnderunderlying,
     //     uint256 amountNPt,
-    //     address to,
-    //     bytes calldata data
+    //     address recipient,
+    //     uint256 deadline
     // );
 }

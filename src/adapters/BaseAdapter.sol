@@ -79,6 +79,8 @@ abstract contract BaseAdapter {
         return _value;
     }
 
+    function scaleStored() external view virtual returns (uint256);
+
     /// @notice Scale getter that must be overriden by child contracts
     function _scale() internal virtual returns (uint256);
 

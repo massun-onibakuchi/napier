@@ -33,7 +33,7 @@ contract CompoundAdapter is BaseAdapter {
         return _to18Decimals(exRate);
     }
 
-    function scaleStored() external view returns (uint256) {
+    function scaleStored() external view override returns (uint256) {
         uint256 exRate = CTokenInterface(adapterParams.target).exchangeRateStored();
         return _to18Decimals(exRate);
     }

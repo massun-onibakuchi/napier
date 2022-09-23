@@ -22,7 +22,7 @@ contract AaveAdapter is BaseAdapter {
     ILendingPool internal _pool;
 
     constructor(AdapterParams memory _adapterParams) BaseAdapter(_adapterParams) {
-        require(adapterParams.underlying == underlying(), "AaveAdapter: unmatching underlying");
+        require(adapterParams.underlying == IAToken(_adapterParams.target).UNDERLYING_ASSET_ADDRESS(), "AaveAdapter: unmatching underlying");
 
         _pool = ILendingPool(LENDING_POOL_V2_MAINNET);
 
@@ -33,25 +33,26 @@ contract AaveAdapter is BaseAdapter {
     /// @inheritdoc BaseAdapter
     /// @notice 1:1 exchange rate
     function scale() external override returns (uint256) {
-        return 1 * 10**(18 - uDecimals);
+        return _normalize(1, uDecimals);
     }
 
     function _scale() internal override returns (uint256) {}
 
     /// @inheritdoc BaseAdapter
     function underlying() public view override returns (address) {
-        address target = adapterParams.target;
-        return IAToken(target).UNDERLYING_ASSET_ADDRESS();
+        return adapterParams.underlying;
     }
 
     /// @inheritdoc BaseAdapter
     /// @dev no funds should be left in the contract after this call
     function wrapUnderlying(uint256 uBal) external override returns (uint256) {
+        require(uBal > 0, "AaveAdapter: uBal lower than 0");
         require(IERC20Metadata(underlying()).balanceOf(address(msg.sender)) >= uBal, "AaveAdapter: Insufficient uBal");
 
         IERC20Metadata target = IERC20Metadata(adapterParams.target);
         uint256 tBalBefore = target.balanceOf(msg.sender);
 
+        IERC20Metadata(underlying()).safeTransferFrom(msg.sender, address(this), uBal);
         _pool.deposit(underlying(), uBal, msg.sender, 0);
 
         uint256 tBalAfter = target.balanceOf(msg.sender);
@@ -63,10 +64,12 @@ contract AaveAdapter is BaseAdapter {
     /// @inheritdoc BaseAdapter
     /// @dev no funds should be left in the contract after this call
     function unwrapTarget(uint256 tBal) external override returns (uint256) {
+        require(tBal > 0, "AaveAdapter: tBal lower than 0");
         require(IERC20Metadata(adapterParams.target).balanceOf(address(msg.sender)) >= tBal, "AaveAdapter: Insufficient tBal");
 
         uint256 uBalBefore = IERC20Metadata(underlying()).balanceOf(msg.sender);
 
+        IERC20Metadata(adapterParams.target).safeTransferFrom(msg.sender, address(this), tBal);
         uint256 withdrawnAmount = _pool.withdraw(adapterParams.target, tBal, msg.sender);
 
         uint256 uBalAfter = IERC20Metadata(underlying()).balanceOf(msg.sender);
@@ -74,5 +77,22 @@ contract AaveAdapter is BaseAdapter {
         require(uBal == tBal, "AaveAdapter: Balance Inequality");
         require(uBal == withdrawnAmount, "AaveAdapter: Balance Inequality");
         return uBal;
+    }
+
+    /// @dev to 18 point decimal
+    /// @param amount The amount of the token in native decimal encoding
+    /// @param decimals decimals of the token
+    function _normalize(uint256 amount, uint8 decimals) internal pure returns (uint256) {
+        // If we need to increase the decimals
+        if (decimals >= 18) {
+            // Then we shift right the amount by the number of decimals
+            amount = amount / 10**(decimals - 18);
+            // If we need to decrease the number
+        } else {
+            // then we shift left by the difference
+            amount = amount * 10**(18 - decimals);
+        }
+        // If nothing changed this is a no-op
+        return amount;
     }
 }

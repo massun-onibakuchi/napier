@@ -57,6 +57,21 @@ interface ITranche is IERC20Metadata {
             uint256 nptAmount
         );
 
+    /// @param pt address
+    /// @param uAmount underlying amount
+    /// @param uReserve underlying reserve
+    /// @param nptReserve NapierPricipalToken reserve
+    /// @param scale npt scale
+    /// @return uAmountUse underlying amount used
+    /// @return nptAmount npt amount to be minted
+    function computeNptToMint(
+        address pt,
+        uint256 uAmount,
+        uint256 uReserve,
+        uint256 nptReserve,
+        uint256 scale
+    ) external view returns (uint256 uAmountUse, uint256 nptAmount);
+
     /// @notice burn NapierPT
     /// @dev only registered pools can burn
     /// @param account The address from where to burn tokens from
@@ -65,6 +80,8 @@ interface ITranche is IERC20Metadata {
 
     /// @notice nPT scale which is calculated based on several PT scales
     function scale() external returns (uint256);
+
+    function scaleStored() external view returns (uint256);
 
     /// @notice Mint Zeros and Claims of a specific protocol
     /// @dev The balance of Zeros/Claims minted will be the same value in units of underlying (less fees)

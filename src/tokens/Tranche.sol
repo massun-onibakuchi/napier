@@ -169,7 +169,8 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
             uint256 nptAmount
         )
     {
-        (uAmountUse, nptAmount) = _computeNptToMint(pt, uAmount, uReserve, nptReserve);
+        uint256 scale = _nptScale();
+        (uAmountUse, nptAmount) = computeNptToMint(pt, uAmount, uReserve, nptReserve, scale);
         if (uAmountUse != 0) {
             // mint pt
             underlying.safeTransferFrom(msg.sender, address(this), uAmountUse);
@@ -181,27 +182,26 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         }
     }
 
-    /// @param _pt address
-    /// @param _uAmount underlying amount
-    /// @param _uReserve underlying reserve
-    /// @param _nptReserve NapierPricipalToken reserve
+    /// @param pt address
+    /// @param uAmount underlying amount
+    /// @param uReserve underlying reserve
+    /// @param nptReserve NapierPricipalToken reserve
+    /// @param scale npt scale
     /// @return uAmountUse underlying amount used
     /// @return nptAmount npt amount to be minted
-    function _computeNptToMint(
-        address _pt,
-        uint256 _uAmount,
-        uint256 _uReserve,
-        uint256 _nptReserve
-    ) internal returns (uint256 uAmountUse, uint256 nptAmount) {
+    function computeNptToMint(
+        address pt,
+        uint256 uAmount,
+        uint256 uReserve,
+        uint256 nptReserve,
+        uint256 scale
+    ) public view returns (uint256 uAmountUse, uint256 nptAmount) {
         // We do not add Principal Token liquidity if it haven't been initialized yet
-        if (_nptReserve != 0) {
-            // _uAmount * _nptReserve / (nptScale * _uReserve * (1 - feePst) + _nptReserve)
-            uint256 feePst = series[_pt].adapter.getIssuanceFee();
-            uint256 nptScale = _nptScale(); // in WAD
-            uAmountUse = _uAmount.fmul(
-                _nptReserve.fdiv(nptScale.fmul(_uReserve).fmul(FixedMath.WAD - feePst) + _nptReserve)
-            );
-            nptAmount = uAmountUse.fmul(nptScale);
+        if (nptReserve != 0) {
+            // _uAmount * nptReserve / (nptScale * _uReserve * (1 - feePst) + nptReserve)
+            uint256 feePst = series[pt].adapter.getIssuanceFee(); // in WAD
+            uAmountUse = uAmount.fmul(nptReserve.fdiv(scale.fmul(uReserve).fmul(FixedMath.WAD - feePst) + nptReserve));
+            nptAmount = uAmountUse.fmul(scale);
         }
     }
 
@@ -253,6 +253,29 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         return _nptScale();
     }
 
+    function scaleStored() external view returns (uint256) {
+        // TODO: gas optimization
+        uint256 len = _zeros.length;
+        uint256 weightedScaleSum;
+        uint256 totalPtBal;
+        for (uint256 i = 0; i < len; ) {
+            Series memory _series = series[_zeros[i]];
+            // TODO:BUG napier math
+            // normalized to 18 decimals
+            uint256 ptBal = _normalize(
+                IERC20(_series.adapter.getTarget()).balanceOf(address(this)),
+                _series.adapter.tDecimals()
+            ); // in WAD
+
+            weightedScaleSum += ptBal.fmul(_series.adapter.scaleStored()); // in WAD
+            totalPtBal += ptBal;
+            unchecked {
+                i++;
+            }
+        }
+        return (totalPtBal != 0) ? weightedScaleSum.fdiv(totalPtBal) : FixedMath.WAD;
+    }
+
     /// @notice Mint Zeros and Claims of a specific protocol
     /// @dev The balance of Zeros/Claims minted will be the same value in units of target (less fees)
     /// @param pt principal token address
@@ -270,7 +293,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
 
     function _issueFromUnderlying(
         address _pt,
-        address _recipient,
+        address _account,
         uint256 _uAmount
     ) internal returns (uint256 mintAmount) {
         Series memory _series = series[_pt];
@@ -278,7 +301,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         underlying.safeApprove(address(_series.adapter), _uAmount);
 
         uint256 tAmount = _series.adapter.wrapUnderlying(_uAmount);
-        mintAmount = _issue(_pt, _series, _recipient, tAmount);
+        mintAmount = _issue(_pt, _series, _account, tAmount);
     }
 
     /// @notice Mint Zeros and Claims of a specific protocol
@@ -295,7 +318,7 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
     function _issue(
         address _pt,
         Series memory _series,
-        address _recipient,
+        address account,
         uint256 _tAmount
     ) internal returns (uint256 mintAmount) {
         require(_series.claim != address(0), "Tranche: invalid pt");
@@ -312,13 +335,13 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
 
         // If the caller has collected on Claims before, use the scale value from that collection to determine how many Zeros/Claims to mint
         // so that the Claims they mint here will have the same amount of yield stored up as their existing holdings
-        uint256 _scale = lscales[_pt][_recipient];
+        uint256 _scale = lscales[_pt][account];
 
         // If the caller has not collected on Claims before, use the current scale value to determine how many Zeros/Claims to mint
         // so that the Claims they mint here are "clean," in that they have no yet-to-be-collected yield
         if (_scale == 0) {
             _scale = _series.adapter.scale(); // NOTE: in WAD term
-            lscales[_pt][_recipient] = _scale;
+            lscales[_pt][account] = _scale;
         }
 
         // Determine the amount of Underlying equal to the Target being sent in (the principal)
@@ -326,10 +349,10 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         mintAmount = tAmountSubFee.fmul(_scale); // NOTE: in target token term
 
         // Mint equal amounts of Zeros and Claims
-        IZero(_pt).mint(_recipient, mintAmount);
-        IClaim(_series.claim).mint(_recipient, mintAmount);
+        IZero(_pt).mint(account, mintAmount);
+        IClaim(_series.claim).mint(account, mintAmount);
 
-        emit Issued(_pt, mintAmount, _recipient);
+        emit Issued(_pt, mintAmount, account);
     }
 
     /// @notice Reconstitute Target by burning Zeros and Claims

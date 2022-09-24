@@ -38,4 +38,10 @@ interface INapierPool {
     //     address recipient,
     //     uint256 deadline
     // );
+
+    function getAmountIn(
+        address pt,
+        address recipient,
+        uint256 amountIn
+    ) external view returns (uint256 uAmountIn, uint256 nptAmountIn);
 }

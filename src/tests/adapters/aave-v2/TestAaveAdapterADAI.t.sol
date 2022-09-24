@@ -4,14 +4,14 @@ pragma solidity 0.8.10;
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import "../../../tokens/Tranche.sol";
-import "../../../adapters/aave/AaveAdapter.sol";
-import {ILendingPool} from "../../../interfaces/aave/ILendingPool.sol";
+import "../../../adapters/aave/AaveV2Adapter.sol";
+import {ILendingPool} from "../../../interfaces/aave-v2/ILendingPool.sol";
 
 import "../../../utils/FixedMath.sol";
 
 import "../TestAdapter.t.sol";
 
-contract TestAaveAdapterADAI is TestAdapter {
+contract TestAaveV2AdapterADAI is TestAdapter {
     using FixedMath for uint256;
 
     address internal constant DAI = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
@@ -26,7 +26,7 @@ contract TestAaveAdapterADAI is TestAdapter {
         underlying = DAI;
         target = aDAI;
 
-        adapter = new AaveAdapter(
+        adapter = new AaveV2Adapter(
             Adapter.AdapterParams({underlying: DAI, target: aDAI, delta: DELTA, minm: 0, maxm: 0, issuanceFee: feePst}),
             LENDING_POOL_V2_MAINNET
         );

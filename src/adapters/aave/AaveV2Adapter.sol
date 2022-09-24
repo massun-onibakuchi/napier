@@ -4,15 +4,15 @@ pragma solidity 0.8.10;
 // External references
 import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {SafeERC20, IERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import {IAToken} from "../../interfaces/aave/IAToken.sol";
-import {ILendingPool} from "../../interfaces/aave/ILendingPool.sol";
+import {IAToken} from "../../interfaces/aave-v2/IAToken.sol";
+import {ILendingPool} from "../../interfaces/aave-v2/ILendingPool.sol";
 
 // Internal references
 import "../BaseAdapter.sol";
 
 /// @title AaveV2 Adapter
 /// NOTE: Aave V2 https://docs.aave.com/developers/tokens/atoken
-contract AaveAdapter is BaseAdapter {
+contract AaveV2Adapter is BaseAdapter {
     using SafeERC20 for IERC20Metadata;
 
     ILendingPool public immutable pool;
@@ -20,7 +20,7 @@ contract AaveAdapter is BaseAdapter {
     constructor(AdapterParams memory _adapterParams, address _poolAddress) BaseAdapter(_adapterParams) {
         require(
             adapterParams.underlying == IAToken(_adapterParams.target).UNDERLYING_ASSET_ADDRESS(),
-            "AaveAdapter: unmatching underlying"
+            "AaveV2Adapter: unmatching underlying"
         );
 
         pool = ILendingPool(_poolAddress);
@@ -48,7 +48,7 @@ contract AaveAdapter is BaseAdapter {
     /// @inheritdoc BaseAdapter
     /// @dev no funds should be left in the contract after this call
     function wrapUnderlying(uint256 uBal) external override returns (uint256) {
-        require(uBal > 0, "AaveAdapter: uBal lower than 0");
+        require(uBal > 0, "AaveV2Adapter: uBal lower than 0");
 
         IERC20Metadata _underlying = IERC20Metadata(adapterParams.underlying);
         IERC20Metadata _target = IERC20Metadata(adapterParams.target);
@@ -60,14 +60,14 @@ contract AaveAdapter is BaseAdapter {
 
         uint256 tBalAfter = _target.balanceOf(msg.sender);
         uint256 tBal = tBalAfter - tBalBefore;
-        require(tBal == uBal, "AaveAdapter: Balance Inequality");
+        require(tBal == uBal, "AaveV2Adapter: Balance Inequality");
         return tBal;
     }
 
     /// @inheritdoc BaseAdapter
     /// @dev no funds should be left in the contract after this call
     function unwrapTarget(uint256 tBal) external override returns (uint256) {
-        require(tBal > 0, "AaveAdapter: tBal lower than 0");
+        require(tBal > 0, "AaveV2Adapter: tBal lower than 0");
 
         IERC20Metadata _underlying = IERC20Metadata(adapterParams.underlying);
         IERC20Metadata _target = IERC20Metadata(adapterParams.target);
@@ -79,7 +79,7 @@ contract AaveAdapter is BaseAdapter {
 
         uint256 uBalAfter = _underlying.balanceOf(msg.sender);
         uint256 uBal = uBalAfter - uBalBefore;
-        require(uBal == tBal, "AaveAdapter: Balance Inequality");
+        require(uBal == tBal, "AaveV2Adapter: Balance Inequality");
         return uBal;
     }
 }

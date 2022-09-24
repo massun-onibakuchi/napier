@@ -22,7 +22,10 @@ contract AaveAdapter is BaseAdapter {
     ILendingPool internal _pool;
 
     constructor(AdapterParams memory _adapterParams) BaseAdapter(_adapterParams) {
-        require(adapterParams.underlying == IAToken(_adapterParams.target).UNDERLYING_ASSET_ADDRESS(), "AaveAdapter: unmatching underlying");
+        require(
+            adapterParams.underlying == IAToken(_adapterParams.target).UNDERLYING_ASSET_ADDRESS(),
+            "AaveAdapter: unmatching underlying"
+        );
 
         _pool = ILendingPool(LENDING_POOL_V2_MAINNET);
 
@@ -65,7 +68,10 @@ contract AaveAdapter is BaseAdapter {
     /// @dev no funds should be left in the contract after this call
     function unwrapTarget(uint256 tBal) external override returns (uint256) {
         require(tBal > 0, "AaveAdapter: tBal lower than 0");
-        require(IERC20Metadata(adapterParams.target).balanceOf(address(msg.sender)) >= tBal, "AaveAdapter: Insufficient tBal");
+        require(
+            IERC20Metadata(adapterParams.target).balanceOf(address(msg.sender)) >= tBal,
+            "AaveAdapter: Insufficient tBal"
+        );
 
         uint256 uBalBefore = IERC20Metadata(underlying()).balanceOf(msg.sender);
 

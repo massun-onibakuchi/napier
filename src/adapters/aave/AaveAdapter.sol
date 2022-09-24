@@ -15,31 +15,26 @@ import "../BaseAdapter.sol";
 contract AaveAdapter is BaseAdapter {
     using SafeERC20 for IERC20Metadata;
 
-    // TODO: Select LendingPool by ChainId
-    address public constant LENDING_POOL_V2_MAINNET = 0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9;
+    ILendingPool public immutable pool;
 
-    ILendingPool internal _pool;
-
-    constructor(AdapterParams memory _adapterParams) BaseAdapter(_adapterParams) {
+    constructor(AdapterParams memory _adapterParams, address _poolAddress) BaseAdapter(_adapterParams) {
         require(
-            
             adapterParams.underlying == IAToken(_adapterParams.target).UNDERLYING_ASSET_ADDRESS(),
-           
             "AaveAdapter: unmatching underlying"
-        
         );
 
-        _pool = ILendingPool(LENDING_POOL_V2_MAINNET);
+        pool = ILendingPool(_poolAddress);
 
-        // TODO: check how to approve deposit for Aave LendingPool
-        IERC20Metadata(_adapterParams.underlying).safeApprove(LENDING_POOL_V2_MAINNET, type(uint256).max);
+        IERC20Metadata(_adapterParams.underlying).safeApprove(_poolAddress, type(uint256).max);
     }
-
-    function scaleStored() external view override returns (uint256) {}
 
     /// @inheritdoc BaseAdapter
     /// @notice 1:1 exchange rate
-    function scale() external view override returns (uint256) {
+    function scale() external pure override returns (uint256) {
+        return FixedMath.WAD;
+    }
+
+    function scaleStored() external pure override returns (uint256) {
         return FixedMath.WAD;
     }
 
@@ -61,7 +56,7 @@ contract AaveAdapter is BaseAdapter {
         uint256 tBalBefore = _target.balanceOf(msg.sender);
 
         _underlying.safeTransferFrom(msg.sender, address(this), uBal);
-        _pool.deposit(address(_underlying), uBal, msg.sender, 0);
+        pool.deposit(address(_underlying), uBal, msg.sender, 0);
 
         uint256 tBalAfter = _target.balanceOf(msg.sender);
         uint256 tBal = tBalAfter - tBalBefore;
@@ -80,7 +75,7 @@ contract AaveAdapter is BaseAdapter {
         uint256 uBalBefore = _underlying.balanceOf(msg.sender);
 
         _target.safeTransferFrom(msg.sender, address(this), tBal);
-        _pool.withdraw(address(_target), tBal, msg.sender);
+        pool.withdraw(address(_target), tBal, msg.sender);
 
         uint256 uBalAfter = _underlying.balanceOf(msg.sender);
         uint256 uBal = uBalAfter - uBalBefore;

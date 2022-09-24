@@ -45,7 +45,7 @@ contract TestAaveAdapterADAI is TestAdapter {
         _fund();
     }
 
-    function _fund() internal override virtual {
+    function _fund() internal virtual override {
         U_DECIMALS = IERC20Metadata(underlying).decimals();
         T_DECIMALS = IERC20Metadata(target).decimals();
         U_BASE = 10**U_DECIMALS;

@@ -1,17 +1,18 @@
 # Napier Finance - Yield Stripping app featuring the most efficient AMM
 
 NOTE: This code is not audited and should not be used in production environment.
-The repository is under continuous development. 
+The repository is under continuous development.
 
-## Summary  
+## Summary
 
 ### Introducing Napier Finance
+
 Napier Finance is a fully decentralized yield stripping protocol that enables users to trade fixed and variable rates most efficiently. 
 
 The competitive advantage, Napier Space AMM featuring unified liquidity is the most capital efficient AMM for any yield source and Principal token of other protocols.
 
-
 ### Our Solution : Unified Principal Tokens Liquidity
+
 Napier Finance introduces a unique unified liquidity AMM concept to the DeFi yield tokenization space. When providing liquidity, virtually calculate various yield source of Principal Tokens as one Napier Principal Token in the case with same underlying, same maturity, different yield source. 
 
 As a result, the LP's average exchange fee APY increases several times. Basically better LP profitability attracts liquidity, which in turn attracts less slippage. 
@@ -22,37 +23,26 @@ In addition, with the more exponential birth of yield-producing protocols, the m
 
 ![PoPV](./docs/napierecosystem.png)
 
-## Requirements 
+## Requirements
 
 [Foundry](https://book.getfoundry.sh/)
 
-- Compiling : ``` forge build ```
-- Testing :  ``` forge test -vvv --fork-url=$RPC_URL --fork-block-number=<block number> ``` 
+To run tests you need access to an archive node like the free ones from [Alchemy](https://alchemyapi.io/). Create `.env` file and set the environment variables.
 
-
-## Contracts 
-
-
-- Adapters :
-
-Adapters hold the logic for stripping yield from yield-bearing assets. 
-For the adapters Napier is using non-airdrop Adapter implementations that must inherit BaseAdapter  and override these functions : 
-
+```bash
+RPC_URL=<Mainnet rpc url>
 ```
-scale()
-getUnderlyingPrice()
-wrapUnderlying()
-unwrapTarget()
-```
+
+- Compiling : `forge build`
+- Testing : `forge test -vvv`
+
+## Overview
 
 ![FF](./docs/napierflowdiagram.png)
-
 
 ## Useful Resources
 
 [Napier Finance](https://kita71yusuke.gitbook.io/napier-finance/)
-
-
 
 ## Future feature
 
@@ -60,7 +50,6 @@ unwrapTarget()
 - Implementation of price manipulation resistance like Uniswap's TWAP
 - Setting yield source tiers according to risk level
 - Token economics to optimize pool reserves
-
 
 ## FAQ
 
@@ -75,6 +64,3 @@ In Napier, all various pools begin maturity at the same time.
 - How do “unified liquidity AMM” work?
 
 A more detailed explanation about how providing liquidity works with arithmetic method is written in our Gitbook. It’s in "Useful resources chapter" of READme.
-
-
-

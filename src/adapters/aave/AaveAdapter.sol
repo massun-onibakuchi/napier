@@ -22,8 +22,11 @@ contract AaveAdapter is BaseAdapter {
 
     constructor(AdapterParams memory _adapterParams) BaseAdapter(_adapterParams) {
         require(
+            
             adapterParams.underlying == IAToken(_adapterParams.target).UNDERLYING_ASSET_ADDRESS(),
+           
             "AaveAdapter: unmatching underlying"
+        
         );
 
         _pool = ILendingPool(LENDING_POOL_V2_MAINNET);

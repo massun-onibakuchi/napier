@@ -52,5 +52,8 @@ contract TestAaveAdapterADAI is TestAdapter {
         T_BASE = 10**T_DECIMALS;
 
         deal(underlying, address(this), 2000 * U_BASE, true);
+
+        IERC20(underlying).approve(address(_pool), type(uint256).max);
+        _pool.deposit(underlying, 1000 * U_BASE, address(this), 0);
     }
 }

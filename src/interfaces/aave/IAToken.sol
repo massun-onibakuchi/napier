@@ -9,9 +9,9 @@ import {IERC20Metadata} from "@openzeppelin/contracts/token/ERC20/extensions/IER
  * @notice Defines the basic interface for an AToken.
  **/
 interface IAToken is IERC20Metadata {
-  /**
-   * @notice Returns the address of the underlying asset of this aToken (E.g. WETH for aWETH)
-   * @return The address of the underlying asset
-   **/
-  function UNDERLYING_ASSET_ADDRESS() external view returns (address);
+    /**
+     * @notice Returns the address of the underlying asset of this aToken (E.g. WETH for aWETH)
+     * @return The address of the underlying asset
+     **/
+    function UNDERLYING_ASSET_ADDRESS() external view returns (address);
 }

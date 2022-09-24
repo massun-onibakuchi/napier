@@ -27,7 +27,8 @@ contract TestAaveAdapterADAI is TestAdapter {
         target = aDAI;
 
         adapter = new AaveAdapter(
-            Adapter.AdapterParams({underlying: DAI, target: aDAI, delta: DELTA, minm: 0, maxm: 0, issuanceFee: feePst})
+            Adapter.AdapterParams({underlying: DAI, target: aDAI, delta: DELTA, minm: 0, maxm: 0, issuanceFee: feePst}),
+            LENDING_POOL_V2_MAINNET
         );
 
         _pool = ILendingPool(LENDING_POOL_V2_MAINNET);

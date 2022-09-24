@@ -23,10 +23,7 @@ In addition, with the exponential birth of yield-producing protocols, Napier's t
 
 [Foundry](https://book.getfoundry.sh/)
 
-To run tests you need access to an archive node like the free ones from [Alchemy](https://al
-chemyapi.io/). Create `.env` file and paste the rpc url.
-
-Then set the environment variable.
+To run tests you need access to an archive node like the free ones from [Alchemy](https://alchemyapi.io/). Create `.env` file and set the environment variables.
 
 ```bash
 RPC_URL=<Mainnet rpc url>

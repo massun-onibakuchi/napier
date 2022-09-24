@@ -194,6 +194,17 @@ contract NapierPool is ERC20, ReentrancyGuard, INapierPool {
         }
     }
 
+    function getAmountIn(
+        address pt,
+        address recipient,
+        uint256 amountIn
+    ) external view returns (uint256, uint256) {
+        (uint256 uReserve, uint256 nptReserve) = getReserves();
+        uint256 scale = nPT.scaleStored();
+        (uint256 amountUsed, uint256 nptAmount) = nPT.computeNptToMint(pt, amountIn, uReserve, nptReserve, scale);
+        return (amountIn - amountUsed, nptAmount);
+    }
+
     modifier notMatured() {
         require(block.timestamp < maturity, "Tranche: before maturity");
         _;

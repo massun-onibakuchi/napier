@@ -16,3 +16,8 @@ solc = '0.8.10'
 [rpc_endpoints]
 # reference to an environment variable RPC_URL
 mainnet = "${RPC_URL}"
+polygon = "${POLYGON_RPC_URL}"
+goerli = "${GOERLI_RPC_URL}"
+
+[etherscan]
+goerli = { key = "${ETHERSCAN_KEY}" }

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity ^0.8.10;
 
-import "../src/adapters/aave/AaveAdapter.sol";
+import "../src/adapters/aave/AaveV2Adapter.sol";
 import "../src/adapters/compound/CompoundAdapter.sol";
 import "../src/adapters/yearn/YearnAdapter.sol";
-import "../src/adapters/aave/AaveAdapter.sol";
+import "../src/adapters/aave/AaveV2Adapter.sol";
 import "../src/tokens/Tranche.sol";
 import {NapierPoolFactory, NapierPool} from "../src/pool/NapierPoolFactory.sol";
 
@@ -64,7 +64,7 @@ contract Deploy is Script {
             })
         );
 
-        Adapter aAdapter = new AaveAdapter(
+        Adapter aAdapter = new AaveV2Adapter(
             Adapter.AdapterParams({
                 underlying: DAI_MAINNET,
                 target: ADAI_MAINNET,

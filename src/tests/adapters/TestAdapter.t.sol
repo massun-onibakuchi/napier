@@ -35,10 +35,7 @@ abstract contract TestAdapter is Test {
     uint256 internal feePst;
 
     function setUp() public {
-        // set up rpc_endpoints in foundry.toml. ref: https://book.getfoundry.sh/cheatcodes/rpc
-        // [rpc_endpoints]
-        // mainnet = "${RPC_URL}"
-        vm.createSelectFork(vm.rpcUrl("mainnet"), FORK_BLOCK);
+        _createFork();
 
         _setup();
 
@@ -71,6 +68,13 @@ abstract contract TestAdapter is Test {
 
         IERC20(underlying).approve(address(tranche), type(uint256).max);
         IERC20(target).approve(address(tranche), type(uint256).max);
+    }
+
+    function _createFork() internal virtual {
+        // set up rpc_endpoints in foundry.toml. ref: https://book.getfoundry.sh/cheatcodes/rpc
+        // [rpc_endpoints]
+        // mainnet = "${RPC_URL}"
+        vm.createSelectFork(vm.rpcUrl("mainnet"), FORK_BLOCK);
     }
 
     /// @dev override this function to set up your own test environment

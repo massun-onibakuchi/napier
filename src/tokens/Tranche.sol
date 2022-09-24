@@ -169,8 +169,8 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
             uint256 nptAmount
         )
     {
-        uint256 scale = _nptScale();
-        (uAmountUse, nptAmount) = computeNptToMint(pt, uAmount, uReserve, nptReserve, scale);
+        uint256 _scale = _nptScale();
+        (uAmountUse, nptAmount) = computeNptToMint(pt, uAmount, uReserve, nptReserve, _scale);
         if (uAmountUse != 0) {
             // mint pt
             underlying.safeTransferFrom(msg.sender, address(this), uAmountUse);

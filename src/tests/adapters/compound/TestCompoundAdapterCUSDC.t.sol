@@ -16,6 +16,9 @@ contract TestCompoundAdapterCUSDC is TestAdapter {
     address internal constant USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address internal constant cUSDC = 0x39AA39c021dfbaE8faC545936693aC917d5E7563;
 
+    address internal constant WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address internal constant CETH = 0x4Ddc2D193948926D02f9B1fE9e1daa0718270ED5;
+
     function _setup() internal override {
         feePst = 0;
         maturity = block.timestamp + 10 weeks;
@@ -30,7 +33,9 @@ contract TestCompoundAdapterCUSDC is TestAdapter {
                 minm: 0,
                 maxm: 0,
                 issuanceFee: feePst
-            })
+            }),
+            WETH,
+            CETH
         );
 
         Adapter[] memory adapters = new Adapter[](1);

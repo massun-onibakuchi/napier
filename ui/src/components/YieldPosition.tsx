@@ -2,9 +2,11 @@ import { BigNumberish, utils } from 'ethers';
 import React, { useState } from 'react';
 import {
   approveTargetToken,
+  approveTargetTokenToPool,
   calculateAmount,
   getERC20Instance,
   mintPT,
+  mintPTAndLP,
 } from '../utils/web3/interactWithContracts';
 import {
   YieldSourceEnum,
@@ -65,9 +67,17 @@ export function YieldPosition({
     approveTargetToken(underlyingSymbolEnum, source);
   }
 
+  function onApproveUnderlyingToPool() {
+    approveTargetTokenToPool(underlyingSymbolEnum, source);
+  }
+
   function onMintPT() {
     console.log(underlyingInputAmount, underlyingSymbolEnum, source);
     mintPT(underlyingInputAmount, underlyingSymbolEnum, source);
+  }
+
+  function onMintPTAndLP() {
+    mintPTAndLP(underlyingInputAmount, underlyingSymbolEnum, source);
   }
 
   function onLPOptionChange(e: any) {
@@ -239,14 +249,14 @@ export function YieldPosition({
               <button
                 className='w-full border-white border-2 text-xl p-8 text-center inline-flex items-center justify-center m-2'
                 type='button'
-                onClick={onApprovePT}
+                onClick={isLPPage ? onApproveUnderlyingToPool : onApprovePT}
               >
                 1) Approve
               </button>
               <button
                 className='w-full border-white border-2 text-xl p-8 text-center inline-flex items-center justify-center m-2'
                 type='button'
-                onClick={onMintPT}
+                onClick={isLPPage ? onMintPTAndLP : onMintPT}
               >
                 2) {isLPPage ? 'Mint & Provide Liquidity' : 'Mint'}
               </button>

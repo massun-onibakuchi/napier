@@ -2,6 +2,7 @@ import { ethers } from 'ethers';
 import { ERC20 } from '../../abi/ERC20';
 import { ERC20__factory } from '../../abi/factories';
 import { NapierPoolFactory__factory } from '../../abi/factories/NapierPoolFactory__factory';
+import { NapierPool__factory } from '../../abi/factories/NapierPool__factory';
 import { Tranche__factory } from '../../abi/factories/Tranche.sol';
 import { getAddressByChainId } from './Addresses';
 import {
@@ -72,9 +73,9 @@ export async function calculateAmount(underlyingInputAmount: number, yieldSymbol
       ptContractAddress = aDAIPT;
     }
   }
-  const trancheSeries = await tranche.getSeries(ptContractAddress);
+  // const trancheSeries = await tranche.getSeries(ptContractAddress);
 
-  console.log('trancheSeries', trancheSeries.adapter);
+  // console.log('trancheSeries', trancheSeries.adapter);
   
   // const adapter = new Contract(tranche.getSeries(ptContractAddress).adapter, abi)
   // const feePst = adapter.getIssuanceFee();
@@ -123,11 +124,7 @@ export async function mintPT(amount: number, yieldSymbol: YieldSymbolEnum, yield
       ptContractAddress = aDAIPT;
     }
   }
-  console.log('issueing');
-
   const issued = await tranche.issueFromUnderlying(ptContractAddress, ethers.BigNumber.from(amount))
-  console.log('issued', amount, issued);
-  // const approveMsg = await dai.approve(addresses.Tranche, ethers.constants.MaxUint256);
 }
 
 export async function mintPTAndLP(amount: number, yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum) {
@@ -135,14 +132,12 @@ export async function mintPTAndLP(amount: number, yieldSymbol: YieldSymbolEnum, 
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
   const chainId = await signer.getChainId();
-  const addresses = getAddressByChainId(chainId);
+  const myAddress = await signer.getAddress();
 
-  const poolFactory = NapierPoolFactory__factory.connect(addresses.Tranche, signer);
+  const addresses = getAddressByChainId(chainId);
   const tranche = Tranche__factory.connect(addresses.Tranche, signer);
 
-
   const [cDAIPT,  yDAIPT, aDAIPT, eDAIPT] = await tranche.getZeros();
-  const rightPool = await poolFactory.getPools();
   let ptContractAddress = "";
   if (yieldSymbol === YieldSymbolEnum.DAI) {
     if (yieldSource === YieldSourceEnum.Aave) {
@@ -150,10 +145,39 @@ export async function mintPTAndLP(amount: number, yieldSymbol: YieldSymbolEnum, 
     }
   }
 
-  const issued = await tranche.issueFromUnderlying(ptContractAddress, ethers.BigNumber.from(amount))
+  const poolFactory = NapierPoolFactory__factory.connect(addresses.NapierPoolFactory, signer);
+  const [ poolAddress ] = await poolFactory.getPools();
 
+  const pool = await NapierPool__factory.connect(poolAddress, signer);
+  const deadline = Math.floor(Date.now() / 1000) + 10 * 60; // now + 10 mins
+  const issued = await pool.addLiquidityFromUnderlying(
+    ptContractAddress,
+    myAddress,
+    ethers.BigNumber.from(amount),
+    0,
+    ethers.BigNumber.from(deadline)
+  )
 
 }
 
+export async function approveTargetTokenToPool(yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum) {
+  await window.ethereum.request({ method: 'eth_requestAccounts' });
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
+  const chainId = await signer.getChainId();
+  const addresses = getAddressByChainId(chainId);
+
+  let targetAddress = "";
+  if (yieldSymbol === YieldSymbolEnum.DAI) {
+    targetAddress = addresses.DAI;
+
+  }
+
+  const poolFactory = NapierPoolFactory__factory.connect(addresses.NapierPoolFactory, signer);
+  const [ poolAddress ] = await poolFactory.getPools();
+
+  const dai = ERC20__factory.connect(addresses.DAI, signer);
+  const approveMsg = await dai.approve(poolAddress, ethers.constants.MaxUint256);
+}
 
 // export async function calculateAmountIn(aount: number, yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum)m

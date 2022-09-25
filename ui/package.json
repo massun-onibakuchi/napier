@@ -47,7 +47,7 @@
     "build": "npm run build:css react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "gen:typechain": "typechain --target ethers-v5 --out-dir ./abi '../out/**/*.json'"
+    "gen:typechain": "typechain --target ethers-v5 --out-dir ./src/abi '../out/**/*.json'"
   },
   "eslintConfig": {
     "extends": [

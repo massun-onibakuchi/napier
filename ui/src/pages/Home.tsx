@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import { ethers } from 'ethers';
+import React, { useEffect, useState } from 'react';
 import NavBar from '../components/NavBar';
+
+declare let window: any;
 
 function Description() {
   return (
@@ -196,10 +199,44 @@ function YieldPositions() {
 }
 
 function Home() {
+  const [myAddress, setMyAddress] = useState<string>('');
+
+  async function requestAccount() {
+    try {
+      await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const address = await signer.getAddress();
+      setMyAddress(address);
+      const balanceBN = await signer.getBalance();
+      //   setBalance(Number(ethers.utils.formatEther(balanceBN)));
+    } catch (e: any) {
+      //   setErrorMsg(e.data?.message?.toString() || e.message);
+    }
+    // setIsLoading(false);
+  }
+
+  useEffect(() => {
+    // if (!isInitialRender) return;
+
+    try {
+      requestAccount();
+      //   getPrice().then((value) => {
+      //     setConversionRate(value);
+      //   });
+    } catch (e: any) {
+      //   setErrorMsg(e.data.message.toString() || e.message);
+    }
+
+    // if (isInitialRender) {
+    //   setIsInitialRender(false);
+    // }
+  }, []);
+
   return (
     <div className=' min-h-screen'>
       <div className='container mx-auto'>
-        <NavBar />
+        <NavBar address={myAddress} />
 
         <body>
           <div>

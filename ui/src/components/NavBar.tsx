@@ -1,6 +1,11 @@
 import React from 'react';
+import truncateEthAddress from '../utils/web3/TruncateEthAddress';
 
-export default function NavBar() {
+interface NavBarProps {
+  address: string;
+}
+
+export default function NavBar({ address }: NavBarProps) {
   return (
     <nav
       className='
@@ -71,7 +76,7 @@ export default function NavBar() {
               'transparent conic-gradient(from 90deg at 50% 50%, #FF0707 0.00%, #E815C0 26.60%, #2244FF 41.87%, #54BC7C 63.55%, #B1C03A 76.35%, #FF8B03 100.00%) 0% 0% no-repeat padding-box',
           }}
         />
-        <span className='ml-1'>0xNapier...Napier</span>
+        <span className='ml-1'>{truncateEthAddress(address)}</span>
       </div>
     </nav>
   );

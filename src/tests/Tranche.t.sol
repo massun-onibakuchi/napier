@@ -30,6 +30,8 @@ contract NapierPoolFactoryMock is INapierPoolFactory {
     {}
 
     function createPool(address underlying, address nPT) external returns (address) {}
+
+    function getPools() external view returns (address[] memory) {}
 }
 
 contract TestTranche is BaseTest {

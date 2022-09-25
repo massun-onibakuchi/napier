@@ -63,6 +63,18 @@ const YIELD_POSITONS: YieldPosition[] = [
     underlyingSymbolEnum: YieldSymbolEnum.DAI,
     source: YieldSourceEnum.Aave,
   },
+  {
+    underlyingSymbolEnum: YieldSymbolEnum.DAI,
+    source: YieldSourceEnum.Compound,
+  },
+  {
+    underlyingSymbolEnum: YieldSymbolEnum.DAI,
+    source: YieldSourceEnum.Yearn,
+  },
+  {
+    underlyingSymbolEnum: YieldSymbolEnum.DAI,
+    source: YieldSourceEnum.Euler,
+  },
 ];
 
 function Home() {

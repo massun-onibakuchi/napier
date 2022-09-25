@@ -80,15 +80,34 @@ export function YieldPosition({
   return (
     <>
       <div className='flex pl-12 bg-[#020927] text-white items-center py-8 '>
-        <div className='w-1/4 text-lg flex'>
-          <img src='./adai.png' alt='aDAI' width='50' />
-          aDAI
-        </div>
+        {source === YieldSourceEnum.Aave && (
+          <div className='w-1/4 text-lg flex'>
+            <img src='./adai.png' alt='aDAI' width='50' />
+            aDAI
+          </div>
+        )}
+        {source === YieldSourceEnum.Compound && (
+          <div className='w-1/4 text-lg flex'>
+            <img src='./cdai.jpeg' alt='cDAI' width='28' />
+            cDAI
+          </div>
+        )}
+        {source === YieldSourceEnum.Yearn && (
+          <div className='w-1/4 text-lg flex'>
+            <img src='./ydai.jpeg' alt='cDAI' width='28' />
+            yDAI
+          </div>
+        )}
+        {source === YieldSourceEnum.Euler && (
+          <div className='w-1/4 text-lg flex'>
+            <img src='./edai.jpeg' alt='eDAI' width='28' />
+            eDAI
+          </div>
+        )}
         <div className='w-1/6 text-lg'>$23.7M</div>
         <div className='w-1/6 text-lg'>1.04%</div>
         <div className='w-1/6 text-lg flex flex-col mr-2'>
-          <span>10 weeks </span>
-          <span>(December 10, 2022)</span>
+          <span>December 10, 2022</span>
         </div>
         <div className='w-1/6 text-lg'>
           <button
@@ -172,8 +191,8 @@ export function YieldPosition({
             <div className='flex m-2 w-full flex-col'>
               <span className='text-center mb-2'>
                 {isLPPage
-                  ? `LP for additional yield with your ${underlyingSymbol}`
-                  : `Mint principal and yield tokens with your ${underlyingSymbol}`}
+                  ? `LP for additional yield with your ${source}`
+                  : `Mint principal and yield tokens with your ${underlyingSymbolEnum}`}
               </span>
               <div className='flex flex-row gap-2  bg-[#1a1f34] p-3 rounded-md'>
                 <input

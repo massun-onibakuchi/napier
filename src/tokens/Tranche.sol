@@ -400,6 +400,29 @@ contract Tranche is ERC20, ReentrancyGuard, ITranche {
         return series[pt];
     }
 
+    function getAllSeriesFull() external view returns (SeriesFull[] memory) {
+        SeriesFull[] memory seriesFull = new SeriesFull[](_zeros.length);
+
+        for (uint256 i = 0; i < _zeros.length; i++) {
+            address zero = _zeros[i];
+            Series memory _series = series[zero];
+            uint256 scaleStored = _series.adapter.scaleStored();
+
+            seriesFull[i] = SeriesFull({
+                target: _series.adapter.getTarget(),
+                zero: zero,
+                claim: _series.claim,
+                adapter: _series.adapter,
+                reward: _series.reward,
+                iscale: _series.iscale,
+                mscale: _series.mscale,
+                maxscale: _series.maxscale > scaleStored ? _series.maxscale : scaleStored,
+                tilt: _series.tilt
+            });
+        }
+        return seriesFull;
+    }
+
     /// @dev to 18 point decimal
     /// @param amount The amount of the token in native decimal encoding
     /// @param decimals decimals of the token

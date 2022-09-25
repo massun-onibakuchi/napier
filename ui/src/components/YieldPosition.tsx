@@ -66,6 +66,7 @@ export function YieldPosition({
   }
 
   function onMintPT() {
+    console.log(underlyingInputAmount, underlyingSymbolEnum, source);
     mintPT(underlyingInputAmount, underlyingSymbolEnum, source);
   }
 

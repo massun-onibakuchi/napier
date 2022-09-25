@@ -4,6 +4,7 @@ pragma solidity ^0.8.10;
 import "../src/adapters/aave/AaveV2Adapter.sol";
 import "../src/adapters/compound/CompoundAdapter.sol";
 import "../src/adapters/yearn/YearnAdapter.sol";
+import "../src/adapters/euler/EulerAdapter.sol";
 
 import "./BaseScripts.sol";
 
@@ -17,7 +18,7 @@ contract Deploy is BaseScripts {
         // https://book.getfoundry.sh/reference/forge/forge-script#wallet-options---raw
         vm.startBroadcast();
 
-        Adapter[] memory adapters = new Adapter[](3);
+        Adapter[] memory adapters = new Adapter[](4);
 
         Adapter cAdapter = new CompoundAdapter(
             Adapter.AdapterParams({
@@ -55,9 +56,22 @@ contract Deploy is BaseScripts {
             LENDING_POOL_V2_MAINNET
         );
 
+        Adapter eAdapter = new EulerAdapter(
+            Adapter.AdapterParams({
+                underlying: DAI_MAINNET,
+                target: EDAI_MAINNET,
+                delta: DELTA,
+                minm: 0,
+                maxm: 0,
+                issuanceFee: feePst
+            }),
+            EULER_MAINNET
+        );
+
         adapters[0] = cAdapter;
         adapters[1] = yAdapter;
         adapters[2] = aAdapter;
+        adapters[3] = eAdapter;
 
         _deployTrancheAndCreatePool(adapters);
 

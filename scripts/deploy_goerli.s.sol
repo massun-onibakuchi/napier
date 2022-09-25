@@ -20,19 +20,19 @@ contract Deploy is BaseScripts {
 
         Adapter[] memory adapters = new Adapter[](1);
 
-        Adapter aAdapter = new AaveV2Adapter(
-            Adapter.AdapterParams({
-                underlying: underlying,
-                target: ADAI_GOERLI,
-                delta: DELTA,
-                minm: 0,
-                maxm: 0,
-                issuanceFee: feePst
-            }),
-            LENDING_POOL_V2_GOERLI
-        );
+        // Adapter adapter = new AaveV2Adapter(
+        //     Adapter.AdapterParams({
+        //         underlying: underlying,
+        //         target: ADAI_GOERLI,
+        //         delta: DELTA,
+        //         minm: 0,
+        //         maxm: 0,
+        //         issuanceFee: feePst
+        //     }),
+        //     LENDING_POOL_V2_GOERLI
+        // );
 
-        adapters[0] = aAdapter;
+        adapters[0] = adapter;
 
         _deployTrancheAndCreatePool(adapters);
 

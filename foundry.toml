@@ -21,3 +21,4 @@ goerli = "${GOERLI_RPC_URL}"
 
 [etherscan]
 goerli = { key = "${ETHERSCAN_KEY}" }
+mumbai = { key = "${ETHERSCAN_KEY}" }

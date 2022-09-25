@@ -25,6 +25,10 @@ abstract contract BaseScripts is Script {
     address internal constant ADAI_MAINNET = 0x028171bCA77440897B824Ca71D1c56caC55b68A3;
     address internal constant LENDING_POOL_V2_MAINNET = 0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9;
 
+    // euler
+    address internal constant EDAI_MAINNET = 0xe025E3ca2bE02316033184551D4d3Aa22024D9DC;
+    address internal constant EULER_MAINNET = 0x27182842E098f60e3D576794A5bFFb0777E025d3;
+
     /********* Goerli *********/
 
     // address internal constant DAI_GOERLI = 0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844;

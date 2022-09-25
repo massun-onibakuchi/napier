@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import NavBar from '../components/NavBar';
 
 declare let window: any;
@@ -209,34 +209,13 @@ function Home() {
       const address = await signer.getAddress();
       setMyAddress(address);
       const balanceBN = await signer.getBalance();
-      //   setBalance(Number(ethers.utils.formatEther(balanceBN)));
-    } catch (e: any) {
-      //   setErrorMsg(e.data?.message?.toString() || e.message);
-    }
-    // setIsLoading(false);
+    } catch (e: any) {}
   }
-
-  useEffect(() => {
-    // if (!isInitialRender) return;
-
-    try {
-      requestAccount();
-      //   getPrice().then((value) => {
-      //     setConversionRate(value);
-      //   });
-    } catch (e: any) {
-      //   setErrorMsg(e.data.message.toString() || e.message);
-    }
-
-    // if (isInitialRender) {
-    //   setIsInitialRender(false);
-    // }
-  }, []);
 
   return (
     <div className=' min-h-screen'>
       <div className='container mx-auto'>
-        <NavBar address={myAddress} />
+        <NavBar address={myAddress} onConnect={() => requestAccount()} />
 
         <body>
           <div>

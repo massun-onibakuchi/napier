@@ -55,7 +55,7 @@ export async function calculateAmount(underlyingInputAmount: number, yieldSymbol
   let ptContractAddress = "";
   if (yieldSymbol === YieldSymbolEnum.DAI) {
     if (yieldSource === YieldSourceEnum.Aave) {
-      ptContractAddress = addresses.ADAI;
+      ptContractAddress = addresses.DAI;
     }
   }
 
@@ -64,8 +64,8 @@ export async function calculateAmount(underlyingInputAmount: number, yieldSymbol
   // call tranche (npt)
   const ONE = ethers.BigNumber.from(10).pow(18)
   const tranche = await Tranche__factory.connect(addresses.Tranche, signer);
-  const [trancheSeries] = await tranche.getSeries(ptContractAddress);
-  console.log('trancheSeries', trancheSeries);
+  const trancheSeries = await tranche.getSeries(ptContractAddress);
+  console.log('trancheSeries', trancheSeries.adapter);
   
   // const adapter = new Contract(tranche.getSeries(ptContractAddress).adapter, abi)
   // const feePst = adapter.getIssuanceFee();
@@ -80,22 +80,41 @@ export async function calculateAmount(underlyingInputAmount: number, yieldSymbol
   // const mintAmount = (tAmount - fee).mul(_scale).div(ONE);
 }
 
-export async function approveERC20Token(yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum) {
+export async function approveTargetToken(yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum) {
   await window.ethereum.request({ method: 'eth_requestAccounts' });
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
-  const myAddress = await signer.getAddress();
-  const { chainId } = await provider.getNetwork();
+  const chainId = await signer.getChainId();
   const addresses = getAddressByChainId(chainId);
 
+  let targetAddress = "";
+  if (yieldSymbol === YieldSymbolEnum.DAI) {
+    targetAddress = addresses.DAI;
+
+  }
+
+  const dai = ERC20__factory.connect(targetAddress, signer);
+  const approveMsg = await dai.approve(addresses.Tranche, ethers.constants.MaxUint256);
+}
+
+export async function mintPT(amount: number, yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum) {
+  console.log(amount)
+  await window.ethereum.request({ method: 'eth_requestAccounts' });
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
+  const chainId = await signer.getChainId();
+  const addresses = getAddressByChainId(chainId);
+
+  const tranche = Tranche__factory.connect(addresses.Tranche, signer);
+
+  const [cDAIPT,  yDAIPT, aDAIPT, eDAIPT] = await tranche.getZeros();
   let ptContractAddress = "";
   if (yieldSymbol === YieldSymbolEnum.DAI) {
     if (yieldSource === YieldSourceEnum.Aave) {
-      ptContractAddress = addresses.ADAI;
+      ptContractAddress = aDAIPT;
     }
   }
-
-  const dai = ERC20__factory.connect(ptContractAddress, provider);
-  const approveMsg = await dai.approve(addresses.Tranche, ethers.constants.MaxUint256);
-  console.log(approveMsg);
+  const issued = await tranche.issueFromUnderlying(ptContractAddress, ethers.BigNumber.from(amount))
+  console.log('issued', amount, issued);
+  // const approveMsg = await dai.approve(addresses.Tranche, ethers.constants.MaxUint256);
 }

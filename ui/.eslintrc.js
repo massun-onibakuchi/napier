@@ -25,7 +25,8 @@ module.exports = {
     "@typescript-eslint/explicit-module-boundary-types": 0,
     "prettier/prettier": 0,
     "camelcase": 0,
-    "default-case": 0
+    "default-case": 0,
+    "jsx-a11y/label-has-associated-control": 0
   },
   settings: {
     "import/resolver": {

@@ -1,8 +1,10 @@
 import { BigNumberish, utils } from 'ethers';
 import React, { useState } from 'react';
 import {
+  approveTargetToken,
   calculateAmount,
   getERC20Instance,
+  mintPT,
 } from '../utils/web3/interactWithContracts';
 import {
   YieldSourceEnum,
@@ -22,6 +24,8 @@ export function YieldPosition({
 }: PositionProps) {
   const [isDropdownOpened, setIsDropdownOpened] = useState<boolean>(false);
   const [isAddingLiquidity, setIsAddingLiquidity] = useState<boolean>(false);
+  const [isLPPage, setIsLPPage] = useState<boolean>(false);
+
   const [underlyingBalance, setUnderlyingBalance] = useState<BigNumberish>(0);
   const [underlyingSymbol, setUnderlyingSymbol] = useState<string>('');
   const [underlyingInputAmount, setUnderlyingInputAmount] = useState<number>(0);
@@ -57,6 +61,22 @@ export function YieldPosition({
     setUnderlyingInputAmount(Number(utils.formatEther(underlyingBalance)));
   }
 
+  function onApprovePT() {
+    approveTargetToken(underlyingSymbolEnum, source);
+  }
+
+  function onMintPT() {
+    mintPT(underlyingInputAmount, underlyingSymbolEnum, source);
+  }
+
+  function onLPOptionChange(e: any) {
+    if (e.target.value === 'a') {
+      setIsLPPage(false);
+    } else {
+      setIsLPPage(true);
+    }
+  }
+
   return (
     <>
       <div className='flex pl-12 bg-[#020927] text-white items-center py-8 '>
@@ -64,9 +84,12 @@ export function YieldPosition({
           <img src='./adai.png' alt='aDAI' width='50' />
           aDAI
         </div>
-        <div className='w-1/6 text-lg'>000</div>
-        <div className='w-1/6 text-lg'>000</div>
-        <div className='w-1/6 text-lg'>000</div>
+        <div className='w-1/6 text-lg'>$23.7M</div>
+        <div className='w-1/6 text-lg'>1.04%</div>
+        <div className='w-1/6 text-lg flex flex-col mr-2'>
+          <span>10 weeks </span>
+          <span>(December 10, 2022)</span>
+        </div>
         <div className='w-1/6 text-lg'>
           <button
             id='dropdownDefault'
@@ -126,13 +149,31 @@ export function YieldPosition({
       {isAddingLiquidity && (
         <div className='border-t border-white bg-[#020927] text-white flex '>
           <div className='w-1/2 flex flex-col items-center justify-center'>
-            <span>1. Mint principal and yield tokens</span>
-            <span> 2. LP for additonal yield</span>
+            <label>
+              <input
+                type='radio'
+                value='a'
+                onChange={onLPOptionChange}
+                checked={!isLPPage}
+              />
+              {'   '} Mint principal and yield tokens
+            </label>
+            <label>
+              <input
+                type='radio'
+                value='b'
+                onChange={onLPOptionChange}
+                checked={isLPPage}
+              />
+              {'   '} Mint principal and yield tokens, and earn LP fees
+            </label>
           </div>
           <div className='w-1/2 border m-2 p-2 border-white flex flex-col'>
             <div className='flex m-2 w-full flex-col'>
               <span className='text-center mb-2'>
-                {`Mint principal and yield tokens with your ${underlyingSymbol}`}
+                {isLPPage
+                  ? `LP for additional yield with your ${underlyingSymbol}`
+                  : `Mint principal and yield tokens with your ${underlyingSymbol}`}
               </span>
               <div className='flex flex-row gap-2  bg-[#1a1f34] p-3 rounded-md'>
                 <input
@@ -156,54 +197,38 @@ export function YieldPosition({
               )} ${underlyingSymbol}`}</span>
             </div>
 
-            <div className='flex m-2 w-full'>
+            <div className='flex m-2 w-full mb-4'>
               <div className='flex flex-col w-1/2'>
-                <span className='text-center m-1'>Principal token</span>
+                <span className='text-center m-1'>
+                  {isLPPage ? 'Underlying' : 'Principal token'}
+                </span>
                 <div className='flex flex-row gap-2  bg-[#1a1f34] mr-2 p-3 rounded-md'>
-                  <input className='bg-[#1a1f34] text-right' />
-                  <div className=''>
-                    <button
-                      type='button'
-                      className='text-white border-white border-2 rounded-lg text-sm px-2 py-1 text-center inline-flex items-center'
-                    >
-                      MAX
-                    </button>
-                  </div>
+                  <div className='bg-[#1a1f34] text-right m-4' />
                 </div>
-                <span className='text-right m-1'>Available balance : 00 </span>
               </div>
               <div className='flex flex-col w-1/2'>
-                <span className='text-center m-1'>Principal token</span>
+                <span className='text-center m-1'>
+                  {isLPPage ? 'Calculated nPT Amount' : 'Yield token'}
+                </span>
                 <div className='flex flex-row gap-2  bg-[#1a1f34] mr-2 p-3 rounded-md'>
-                  <input className='bg-[#1a1f34] text-right' />
-                  <div className=''>
-                    <button
-                      type='button'
-                      className='text-white border-white border-2 rounded-lg text-sm px-2 py-1 text-center inline-flex items-center'
-                    >
-                      MAX
-                    </button>
-                  </div>
+                  <div className='bg-[#1a1f34] text-right m-4' />
                 </div>
-                <span className='text-right m-1'>Available balance : 00 </span>
               </div>
             </div>
-            <span className='text-right m-2'>
-              {' '}
-              Calculated nPT Amount : 00000 (nPT)
-            </span>
             <div className='flex justify-center mt-2'>
               <button
                 className='w-full border-white border-2 text-xl p-8 text-center inline-flex items-center justify-center m-2'
                 type='button'
+                onClick={onApprovePT}
               >
-                Approve
+                1) Approve
               </button>
               <button
                 className='w-full border-white border-2 text-xl p-8 text-center inline-flex items-center justify-center m-2'
                 type='button'
+                onClick={onMintPT}
               >
-                Enter Amount
+                2) {isLPPage ? 'Mint & Provide Liquidity' : 'Mint'}
               </button>
             </div>
           </div>

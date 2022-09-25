@@ -10,7 +10,18 @@ import {BaseAdapter as Adapter} from "../adapters/BaseAdapter.sol";
 ///      nPT is like a indexed token, which is composed of some Prinicipal Tokens such as PT of aDAI and PT of cDAI.
 interface ITranche is IERC20Metadata {
     struct Series {
-        // address zero; // Zero ERC20 token
+        address claim; // Claim ERC20 token
+        Adapter adapter; // Adapter
+        uint256 reward; // tracks fees due to the series' settler
+        uint256 iscale; // scale at issuance
+        uint256 mscale; // scale at maturity
+        uint256 maxscale; // max scale value from this series' lifetime
+        uint128 tilt; // % of underlying principal initially reserved for Claims
+    }
+
+    struct SeriesFull {
+        address target; // Target ERC20 token
+        address zero; // Zero ERC20 token
         address claim; // Claim ERC20 token
         Adapter adapter; // Adapter
         uint256 reward; // tracks fees due to the series' settler
@@ -37,6 +48,8 @@ interface ITranche is IERC20Metadata {
     function getZeros() external view returns (address[] memory);
 
     function getSeries(address) external view returns (Series memory);
+
+    function getAllSeriesFull() external view returns (SeriesFull[] memory);
 
     /// @notice mint NapierPT
     /// @dev only registered pools can mint

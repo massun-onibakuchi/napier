@@ -9,6 +9,8 @@ contract NapierPoolFactory is INapierPoolFactory {
 
     mapping(address => bool) private _isPoolRegistered;
 
+    address[] internal _pools;
+
     address internal _tempUnderlying;
     address internal _tempNpt;
     uint256 internal _tempMaturity;
@@ -21,6 +23,7 @@ contract NapierPoolFactory is INapierPoolFactory {
         governance = _governance;
     }
 
+    // TODO: provent deploying same pair
     /// @notice Deploy a new Pool contract.
     /// @param underlying Address of the underlying token
     /// @param nPT Address of the Napier Principal Token
@@ -32,7 +35,10 @@ contract NapierPoolFactory is INapierPoolFactory {
 
         bytes32 salt = keccak256(abi.encodePacked(underlying, nPT));
         address pool = address(new NapierPool{salt: salt}());
+        require(pool == poolFor(underlying, nPT), "NapierPoolFactory: invalid pool address");
+
         _isPoolRegistered[pool] = true;
+        _pools.push(pool);
 
         emit PoolCreated(underlying, nPT);
 
@@ -64,6 +70,10 @@ contract NapierPoolFactory is INapierPoolFactory {
 
     function isRegisteredPool(address pool) external view returns (bool) {
         return _isPoolRegistered[pool];
+    }
+
+    function getPools() external view returns (address[] memory) {
+        return _pools;
     }
 
     function poolFor(address underlying, address npt) public view returns (address pool) {

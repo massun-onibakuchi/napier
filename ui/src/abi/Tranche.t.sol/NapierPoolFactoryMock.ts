@@ -26,11 +26,16 @@ export interface NapierPoolFactoryMockInterface extends utils.Interface {
   functions: {
     "createPool(address,address)": FunctionFragment;
     "getData()": FunctionFragment;
+    "getPools()": FunctionFragment;
     "isRegisteredPool(address)": FunctionFragment;
   };
 
   getFunction(
-    nameOrSignatureOrTopic: "createPool" | "getData" | "isRegisteredPool"
+    nameOrSignatureOrTopic:
+      | "createPool"
+      | "getData"
+      | "getPools"
+      | "isRegisteredPool"
   ): FunctionFragment;
 
   encodeFunctionData(
@@ -38,6 +43,7 @@ export interface NapierPoolFactoryMockInterface extends utils.Interface {
     values: [PromiseOrValue<string>, PromiseOrValue<string>]
   ): string;
   encodeFunctionData(functionFragment: "getData", values?: undefined): string;
+  encodeFunctionData(functionFragment: "getPools", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "isRegisteredPool",
     values: [PromiseOrValue<string>]
@@ -45,6 +51,7 @@ export interface NapierPoolFactoryMockInterface extends utils.Interface {
 
   decodeFunctionResult(functionFragment: "createPool", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getData", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "getPools", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "isRegisteredPool",
     data: BytesLike
@@ -90,6 +97,8 @@ export interface NapierPoolFactoryMock extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber, string, string, string]>;
 
+    getPools(overrides?: CallOverrides): Promise<[string[]]>;
+
     isRegisteredPool(
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -106,6 +115,8 @@ export interface NapierPoolFactoryMock extends BaseContract {
     overrides?: CallOverrides
   ): Promise<[BigNumber, string, string, string]>;
 
+  getPools(overrides?: CallOverrides): Promise<string[]>;
+
   isRegisteredPool(
     arg0: PromiseOrValue<string>,
     overrides?: CallOverrides
@@ -121,6 +132,8 @@ export interface NapierPoolFactoryMock extends BaseContract {
     getData(
       overrides?: CallOverrides
     ): Promise<[BigNumber, string, string, string]>;
+
+    getPools(overrides?: CallOverrides): Promise<string[]>;
 
     isRegisteredPool(
       arg0: PromiseOrValue<string>,
@@ -139,6 +152,8 @@ export interface NapierPoolFactoryMock extends BaseContract {
 
     getData(overrides?: CallOverrides): Promise<BigNumber>;
 
+    getPools(overrides?: CallOverrides): Promise<BigNumber>;
+
     isRegisteredPool(
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -153,6 +168,8 @@ export interface NapierPoolFactoryMock extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     getData(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getPools(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     isRegisteredPool(
       arg0: PromiseOrValue<string>,

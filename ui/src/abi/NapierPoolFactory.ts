@@ -31,6 +31,7 @@ export interface NapierPoolFactoryInterface extends utils.Interface {
     "POOL_CREATION_HASH()": FunctionFragment;
     "createPool(address,address)": FunctionFragment;
     "getData()": FunctionFragment;
+    "getPools()": FunctionFragment;
     "governance()": FunctionFragment;
     "isRegisteredPool(address)": FunctionFragment;
     "poolFor(address,address)": FunctionFragment;
@@ -41,6 +42,7 @@ export interface NapierPoolFactoryInterface extends utils.Interface {
       | "POOL_CREATION_HASH"
       | "createPool"
       | "getData"
+      | "getPools"
       | "governance"
       | "isRegisteredPool"
       | "poolFor"
@@ -55,6 +57,7 @@ export interface NapierPoolFactoryInterface extends utils.Interface {
     values: [PromiseOrValue<string>, PromiseOrValue<string>]
   ): string;
   encodeFunctionData(functionFragment: "getData", values?: undefined): string;
+  encodeFunctionData(functionFragment: "getPools", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "governance",
     values?: undefined
@@ -74,6 +77,7 @@ export interface NapierPoolFactoryInterface extends utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "createPool", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getData", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "getPools", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "governance", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "isRegisteredPool",
@@ -138,6 +142,8 @@ export interface NapierPoolFactory extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber, string, string, string]>;
 
+    getPools(overrides?: CallOverrides): Promise<[string[]]>;
+
     governance(overrides?: CallOverrides): Promise<[string]>;
 
     isRegisteredPool(
@@ -164,6 +170,8 @@ export interface NapierPoolFactory extends BaseContract {
     overrides?: CallOverrides
   ): Promise<[BigNumber, string, string, string]>;
 
+  getPools(overrides?: CallOverrides): Promise<string[]>;
+
   governance(overrides?: CallOverrides): Promise<string>;
 
   isRegisteredPool(
@@ -189,6 +197,8 @@ export interface NapierPoolFactory extends BaseContract {
     getData(
       overrides?: CallOverrides
     ): Promise<[BigNumber, string, string, string]>;
+
+    getPools(overrides?: CallOverrides): Promise<string[]>;
 
     governance(overrides?: CallOverrides): Promise<string>;
 
@@ -226,6 +236,8 @@ export interface NapierPoolFactory extends BaseContract {
 
     getData(overrides?: CallOverrides): Promise<BigNumber>;
 
+    getPools(overrides?: CallOverrides): Promise<BigNumber>;
+
     governance(overrides?: CallOverrides): Promise<BigNumber>;
 
     isRegisteredPool(
@@ -252,6 +264,8 @@ export interface NapierPoolFactory extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     getData(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getPools(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     governance(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

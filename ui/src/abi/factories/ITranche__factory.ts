@@ -352,6 +352,66 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "getAllSeriesFull",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "address",
+            name: "target",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "zero",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "claim",
+            type: "address",
+          },
+          {
+            internalType: "contract BaseAdapter",
+            name: "adapter",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "reward",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "iscale",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "mscale",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "maxscale",
+            type: "uint256",
+          },
+          {
+            internalType: "uint128",
+            name: "tilt",
+            type: "uint128",
+          },
+        ],
+        internalType: "struct ITranche.SeriesFull[]",
+        name: "",
+        type: "tuple[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "address",

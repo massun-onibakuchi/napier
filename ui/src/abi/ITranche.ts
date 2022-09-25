@@ -28,6 +28,40 @@ import type {
 } from "./common";
 
 export declare namespace ITranche {
+  export type SeriesFullStruct = {
+    target: PromiseOrValue<string>;
+    zero: PromiseOrValue<string>;
+    claim: PromiseOrValue<string>;
+    adapter: PromiseOrValue<string>;
+    reward: PromiseOrValue<BigNumberish>;
+    iscale: PromiseOrValue<BigNumberish>;
+    mscale: PromiseOrValue<BigNumberish>;
+    maxscale: PromiseOrValue<BigNumberish>;
+    tilt: PromiseOrValue<BigNumberish>;
+  };
+
+  export type SeriesFullStructOutput = [
+    string,
+    string,
+    string,
+    string,
+    BigNumber,
+    BigNumber,
+    BigNumber,
+    BigNumber,
+    BigNumber
+  ] & {
+    target: string;
+    zero: string;
+    claim: string;
+    adapter: string;
+    reward: BigNumber;
+    iscale: BigNumber;
+    mscale: BigNumber;
+    maxscale: BigNumber;
+    tilt: BigNumber;
+  };
+
   export type SeriesStruct = {
     claim: PromiseOrValue<string>;
     adapter: PromiseOrValue<string>;
@@ -67,6 +101,7 @@ export interface ITrancheInterface extends utils.Interface {
     "combine(address,uint256)": FunctionFragment;
     "computeNptToMint(address,uint256,uint256,uint256,uint256)": FunctionFragment;
     "decimals()": FunctionFragment;
+    "getAllSeriesFull()": FunctionFragment;
     "getSeries(address)": FunctionFragment;
     "getZeros()": FunctionFragment;
     "issuance()": FunctionFragment;
@@ -95,6 +130,7 @@ export interface ITrancheInterface extends utils.Interface {
       | "combine"
       | "computeNptToMint"
       | "decimals"
+      | "getAllSeriesFull"
       | "getSeries"
       | "getZeros"
       | "issuance"
@@ -153,6 +189,10 @@ export interface ITrancheInterface extends utils.Interface {
     ]
   ): string;
   encodeFunctionData(functionFragment: "decimals", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "getAllSeriesFull",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "getSeries",
     values: [PromiseOrValue<string>]
@@ -223,6 +263,10 @@ export interface ITrancheInterface extends utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "decimals", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getAllSeriesFull",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "getSeries", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "getZeros", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "issuance", data: BytesLike): Result;
@@ -421,6 +465,10 @@ export interface ITranche extends BaseContract {
 
     decimals(overrides?: CallOverrides): Promise<[number]>;
 
+    getAllSeriesFull(
+      overrides?: CallOverrides
+    ): Promise<[ITranche.SeriesFullStructOutput[]]>;
+
     getSeries(
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -542,6 +590,10 @@ export interface ITranche extends BaseContract {
 
   decimals(overrides?: CallOverrides): Promise<number>;
 
+  getAllSeriesFull(
+    overrides?: CallOverrides
+  ): Promise<ITranche.SeriesFullStructOutput[]>;
+
   getSeries(
     arg0: PromiseOrValue<string>,
     overrides?: CallOverrides
@@ -662,6 +714,10 @@ export interface ITranche extends BaseContract {
     >;
 
     decimals(overrides?: CallOverrides): Promise<number>;
+
+    getAllSeriesFull(
+      overrides?: CallOverrides
+    ): Promise<ITranche.SeriesFullStructOutput[]>;
 
     getSeries(
       arg0: PromiseOrValue<string>,
@@ -844,6 +900,8 @@ export interface ITranche extends BaseContract {
 
     decimals(overrides?: CallOverrides): Promise<BigNumber>;
 
+    getAllSeriesFull(overrides?: CallOverrides): Promise<BigNumber>;
+
     getSeries(
       arg0: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -963,6 +1021,8 @@ export interface ITranche extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     decimals(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    getAllSeriesFull(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getSeries(
       arg0: PromiseOrValue<string>,

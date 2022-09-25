@@ -28,6 +28,40 @@ import type {
 } from "../common";
 
 export declare namespace ITranche {
+  export type SeriesFullStruct = {
+    target: PromiseOrValue<string>;
+    zero: PromiseOrValue<string>;
+    claim: PromiseOrValue<string>;
+    adapter: PromiseOrValue<string>;
+    reward: PromiseOrValue<BigNumberish>;
+    iscale: PromiseOrValue<BigNumberish>;
+    mscale: PromiseOrValue<BigNumberish>;
+    maxscale: PromiseOrValue<BigNumberish>;
+    tilt: PromiseOrValue<BigNumberish>;
+  };
+
+  export type SeriesFullStructOutput = [
+    string,
+    string,
+    string,
+    string,
+    BigNumber,
+    BigNumber,
+    BigNumber,
+    BigNumber,
+    BigNumber
+  ] & {
+    target: string;
+    zero: string;
+    claim: string;
+    adapter: string;
+    reward: BigNumber;
+    iscale: BigNumber;
+    mscale: BigNumber;
+    maxscale: BigNumber;
+    tilt: BigNumber;
+  };
+
   export type SeriesStruct = {
     claim: PromiseOrValue<string>;
     adapter: PromiseOrValue<string>;
@@ -68,6 +102,7 @@ export interface TrancheInterface extends utils.Interface {
     "computeNptToMint(address,uint256,uint256,uint256,uint256)": FunctionFragment;
     "decimals()": FunctionFragment;
     "decreaseAllowance(address,uint256)": FunctionFragment;
+    "getAllSeriesFull()": FunctionFragment;
     "getSeries(address)": FunctionFragment;
     "getZeros()": FunctionFragment;
     "increaseAllowance(address,uint256)": FunctionFragment;
@@ -101,6 +136,7 @@ export interface TrancheInterface extends utils.Interface {
       | "computeNptToMint"
       | "decimals"
       | "decreaseAllowance"
+      | "getAllSeriesFull"
       | "getSeries"
       | "getZeros"
       | "increaseAllowance"
@@ -166,6 +202,10 @@ export interface TrancheInterface extends utils.Interface {
   encodeFunctionData(
     functionFragment: "decreaseAllowance",
     values: [PromiseOrValue<string>, PromiseOrValue<BigNumberish>]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getAllSeriesFull",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getSeries",
@@ -252,6 +292,10 @@ export interface TrancheInterface extends utils.Interface {
   decodeFunctionResult(functionFragment: "decimals", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "decreaseAllowance",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getAllSeriesFull",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getSeries", data: BytesLike): Result;
@@ -468,6 +512,10 @@ export interface Tranche extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<ContractTransaction>;
 
+    getAllSeriesFull(
+      overrides?: CallOverrides
+    ): Promise<[ITranche.SeriesFullStructOutput[]]>;
+
     getSeries(
       pt: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -605,6 +653,10 @@ export interface Tranche extends BaseContract {
     overrides?: Overrides & { from?: PromiseOrValue<string> }
   ): Promise<ContractTransaction>;
 
+  getAllSeriesFull(
+    overrides?: CallOverrides
+  ): Promise<ITranche.SeriesFullStructOutput[]>;
+
   getSeries(
     pt: PromiseOrValue<string>,
     overrides?: CallOverrides
@@ -741,6 +793,10 @@ export interface Tranche extends BaseContract {
       subtractedValue: PromiseOrValue<BigNumberish>,
       overrides?: CallOverrides
     ): Promise<boolean>;
+
+    getAllSeriesFull(
+      overrides?: CallOverrides
+    ): Promise<ITranche.SeriesFullStructOutput[]>;
 
     getSeries(
       pt: PromiseOrValue<string>,
@@ -945,6 +1001,8 @@ export interface Tranche extends BaseContract {
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<BigNumber>;
 
+    getAllSeriesFull(overrides?: CallOverrides): Promise<BigNumber>;
+
     getSeries(
       pt: PromiseOrValue<string>,
       overrides?: CallOverrides
@@ -1080,6 +1138,8 @@ export interface Tranche extends BaseContract {
       subtractedValue: PromiseOrValue<BigNumberish>,
       overrides?: Overrides & { from?: PromiseOrValue<string> }
     ): Promise<PopulatedTransaction>;
+
+    getAllSeriesFull(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getSeries(
       pt: PromiseOrValue<string>,

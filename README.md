@@ -3,6 +3,8 @@
 NOTE: This code is not audited and should not be used in production environment.
 The repository is under continuous development.
 
+https://user-images.githubusercontent.com/4685781/192194451-db30ff08-660b-482f-939c-a42dc92d9035.mov
+
 ## Summary
 
 ### Introducing Napier Finance

@@ -66,5 +66,9 @@ abstract contract BaseScripts is Script {
         NapierPoolFactory poolFactory = new NapierPoolFactory(address(this));
         Tranche tranche = new Tranche(adapters, IERC20Metadata(underlying), maturity, msg.sender, poolFactory);
         address pool = poolFactory.createPool(underlying, address(tranche));
+
+        console.log("address(tranche) :>>", address(tranche));
+        console.log("address(poolFactory) :>>", address(poolFactory));
+        console.log("address(pool) :>>", address(pool));
     }
 }

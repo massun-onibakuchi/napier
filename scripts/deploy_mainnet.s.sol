@@ -73,6 +73,10 @@ contract Deploy is BaseScripts {
         adapters[2] = aAdapter;
         adapters[3] = eAdapter;
 
+        for (uint256 i = 0; i < adapters.length; i++) {
+            console.log(adapters[i].symbol(), address(adapters[i]));
+        }
+
         _deployTrancheAndCreatePool(adapters);
 
         vm.stopBroadcast();

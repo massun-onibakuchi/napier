@@ -82,8 +82,7 @@ export async function calculateAmount(underlyingInputAmount: number, yieldSymbol
   const feePst = await adapter.getIssuanceFee();
     const fee = ethers.BigNumber.from(tAmount).mul(feePst).div(ONE);
   console.log('feePst', feePst)
-  const lscale = await tranche.lscales(ptContractAddress, myAddress);
-  const scale = lscale.isZero() ? await adapter.scaleStored() : lscale;
+  const scale = await tranche.lscales(ptContractAddress, myAddress);
   console.log('scale,', scale);
   const mintAmount = (tAmount.add(-fee)).mul(scale).div(ONE);
   console.log(mintAmount.toNumber());
@@ -136,7 +135,7 @@ export async function mintPT(amount: number, yieldSymbol: YieldSymbolEnum, yield
       ptContractAddress = aDAIPT;
     }
   }
-  const issued = await tranche.issueFromUnderlying(ptContractAddress, ethers.BigNumber.from(amount))
+  const issued = await tranche.issueFromUnderlying(ptContractAddress, ethers.utils.parseEther(String(amount)))
 }
 
 export async function mintPTAndLP(amount: number, yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum) {
@@ -166,20 +165,19 @@ export async function mintPTAndLP(amount: number, yieldSymbol: YieldSymbolEnum, 
   console.log(
     ptContractAddress,
     myAddress,
-    ethers.BigNumber.from(amount),
-    ethers.BigNumber.from(0),
-    ethers.BigNumber.from(deadline)
+    ethers.utils.parseEther(String(amount)),
+    ethers.utils.parseEther(String(0)),
+    ethers.utils.parseEther(String(deadline))
   )
   // const [res1, res2] = await pool.getReserves();
   // console.log(res1.toString(), res2.toString())
   const issued = await pool.addLiquidityFromUnderlying(
     ptContractAddress,
     myAddress,
-    ethers.BigNumber.from(amount),
-    ethers.BigNumber.from(0),
-    ethers.BigNumber.from(deadline),
+    ethers.utils.parseEther(String(amount)),
+    ethers.utils.parseEther(String(0)),
+    ethers.utils.parseEther(String(deadline)),
   )
-
 }
 
 export async function approveTargetTokenToPool(yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum) {

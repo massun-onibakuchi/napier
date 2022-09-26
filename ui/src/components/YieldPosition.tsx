@@ -56,11 +56,16 @@ export function YieldPosition({
     setIsAddingLiquidity(!isAddingLiquidity);
     setIsDropdownOpened(false);
 
+    await updateUnderlyingBalance();
+  }
+
+  async function updateUnderlyingBalance() {
     const dai = await getERC20Instance(underlyingSymbolEnum);
     const balance = await dai.balanceOf(myAddress); // alice
     const symbol = await dai.symbol();
     setUnderlyingBalance(balance);
     setUnderlyingSymbol(symbol);
+    console.log('balance', underlyingBalance);
   }
 
   function onUnderlyingInput(e: React.FormEvent<HTMLInputElement>) {
@@ -96,13 +101,16 @@ export function YieldPosition({
     approveTargetTokenToPool(underlyingSymbolEnum, source);
   }
 
-  function onMintPT() {
+  async function onMintPT() {
     console.log(underlyingInputAmount, underlyingSymbolEnum, source);
-    mintPT(underlyingInputAmount, underlyingSymbolEnum, source);
+    await mintPT(underlyingInputAmount, underlyingSymbolEnum, source);
+    await updateUnderlyingBalance();
   }
 
-  function onMintPTAndLP() {
-    mintPTAndLP(underlyingInputAmount, underlyingSymbolEnum, source);
+  async function onMintPTAndLP() {
+    console.log();
+    await mintPTAndLP(underlyingInputAmount, underlyingSymbolEnum, source);
+    await updateUnderlyingBalance();
   }
 
   function onLPOptionChange(e: any) {

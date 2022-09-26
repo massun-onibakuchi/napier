@@ -18,12 +18,18 @@ interface PositionProps {
   underlyingSymbolEnum: YieldSymbolEnum;
   source: YieldSourceEnum;
   myAddress: string;
+  TVL: string;
+  APY: string;
+  maturity: string;
 }
 
 export function YieldPosition({
   underlyingSymbolEnum,
   source,
   myAddress,
+  TVL,
+  APY,
+  maturity,
 }: PositionProps) {
   const [isDropdownOpened, setIsDropdownOpened] = useState<boolean>(false);
   const [isAddingLiquidity, setIsAddingLiquidity] = useState<boolean>(false);
@@ -134,10 +140,10 @@ export function YieldPosition({
             eDAI
           </div>
         )}
-        <div className='w-1/6 text-lg'>$23.7M</div>
-        <div className='w-1/6 text-lg'>1.04%</div>
+        <div className='w-1/6 text-lg'>{TVL}</div>
+        <div className='w-1/6 text-lg'>{APY}</div>
         <div className='w-1/6 text-lg flex flex-col mr-2'>
-          <span>December 10, 2022</span>
+          <span>{maturity}</span>
         </div>
         <div className='w-1/6 text-lg'>
           <button

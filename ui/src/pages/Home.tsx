@@ -27,6 +27,9 @@ function Description() {
 interface YieldPosition {
   underlyingSymbolEnum: YieldSymbolEnum;
   source: YieldSourceEnum;
+  TVL: string;
+  APY: string;
+  maturity: string;
 }
 interface YieldPositionsProps {
   positions: YieldPosition[];
@@ -44,15 +47,20 @@ function YieldPositions({ positions, myAddress }: YieldPositionsProps) {
           <div className='w-1/6 text-lg'>MATURITY</div>
           <div />
         </div>
-        {positions.map(({ underlyingSymbolEnum, source }) => (
-          <div className='mb-6' key={`${underlyingSymbolEnum}-${source}`}>
-            <YieldPosition
-              underlyingSymbolEnum={underlyingSymbolEnum}
-              source={source}
-              myAddress={myAddress}
-            />
-          </div>
-        ))}
+        {positions.map(
+          ({ underlyingSymbolEnum, source, TVL, APY, maturity }) => (
+            <div className='mb-6' key={`${underlyingSymbolEnum}-${source}`}>
+              <YieldPosition
+                underlyingSymbolEnum={underlyingSymbolEnum}
+                source={source}
+                myAddress={myAddress}
+                TVL={TVL}
+                APY={APY}
+                maturity={maturity}
+              />
+            </div>
+          ),
+        )}
       </div>
     </div>
   );
@@ -62,18 +70,30 @@ const YIELD_POSITONS: YieldPosition[] = [
   {
     underlyingSymbolEnum: YieldSymbolEnum.DAI,
     source: YieldSourceEnum.Aave,
-  },
-  {
-    underlyingSymbolEnum: YieldSymbolEnum.DAI,
-    source: YieldSourceEnum.Compound,
+    TVL: '$ 27.4M',
+    APY: '1.33%',
+    maturity: 'Apr 1st, 2022',
   },
   {
     underlyingSymbolEnum: YieldSymbolEnum.DAI,
     source: YieldSourceEnum.Yearn,
+    TVL: '$ 19.3M',
+    APY: '1.62%',
+    maturity: 'Apr 1st, 2022',
+  },
+  {
+    underlyingSymbolEnum: YieldSymbolEnum.DAI,
+    source: YieldSourceEnum.Compound,
+    TVL: '$ 25.1M',
+    APY: '1.22%',
+    maturity: 'Apr 1st, 2022',
   },
   {
     underlyingSymbolEnum: YieldSymbolEnum.DAI,
     source: YieldSourceEnum.Euler,
+    TVL: '$ 9.5M',
+    APY: '1.34%',
+    maturity: 'Apr 1st, 2022',
   },
 ];
 

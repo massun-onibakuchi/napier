@@ -177,7 +177,6 @@ export async function mintPTAndLP(amount: number, yieldSymbol: YieldSymbolEnum, 
     ethers.BigNumber.from(amount),
     ethers.BigNumber.from(0),
     ethers.BigNumber.from(deadline),
-    {gasLimit: 5000000}
   )
 
 }

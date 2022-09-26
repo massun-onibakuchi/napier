@@ -4,6 +4,7 @@ import {
   approveTargetToken,
   approveTargetTokenToPool,
   calculateAmount,
+  calculateAmountIn,
   getERC20Instance,
   mintPT,
   mintPTAndLP,
@@ -31,6 +32,12 @@ export function YieldPosition({
   const [underlyingBalance, setUnderlyingBalance] = useState<BigNumberish>(0);
   const [underlyingSymbol, setUnderlyingSymbol] = useState<string>('');
   const [underlyingInputAmount, setUnderlyingInputAmount] = useState<number>(0);
+  const [underlyingAmountRequiredForLP, setUnderlyingAmountRequiredForLP] =
+    useState<number>(0);
+  const [expectedNptAmount, setExpectedNptAmount] = useState<number>(0);
+  const [expectedPrincipalToken, setExpectedPrincipalToken] =
+    useState<number>(0);
+  const [expectedYieldToken, setExpectedYieldToken] = useState<number>(0);
 
   // TODO
   const toFixed = 0;
@@ -56,7 +63,19 @@ export function YieldPosition({
       return;
     }
     setUnderlyingInputAmount(input);
-    calculateAmount(underlyingInputAmount, underlyingSymbolEnum, source);
+    if (isLPPage) {
+      const setAmountIn = (uAmount: number, nptAmount: number) => {
+        setUnderlyingAmountRequiredForLP(uAmount);
+        setExpectedNptAmount(nptAmount);
+      };
+      calculateAmountIn(input, underlyingSymbolEnum, source, setAmountIn);
+    } else {
+      const setAmountIn = (pAmount: number, yAmount: number) => {
+        setExpectedPrincipalToken(pAmount);
+        setExpectedYieldToken(yAmount);
+      };
+      calculateAmount(input, underlyingSymbolEnum, source, setAmountIn);
+    }
   }
 
   function onUnderlyingMaxClick() {
@@ -232,16 +251,26 @@ export function YieldPosition({
                 <span className='text-center m-1'>
                   {isLPPage ? 'Underlying' : 'Principal token'}
                 </span>
-                <div className='flex flex-row gap-2  bg-[#1a1f34] mr-2 p-3 rounded-md'>
-                  <div className='bg-[#1a1f34] text-right m-4' />
+                <div className='flex flex-row gap-2  bg-[#1a1f34] mr-2 rounded-md text-right justify-center'>
+                  <div className='bg-[#1a1f34] m-4 justify-center'>
+                    <span className=''>
+                      {isLPPage
+                        ? underlyingAmountRequiredForLP
+                        : expectedPrincipalToken}
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className='flex flex-col w-1/2'>
                 <span className='text-center m-1'>
                   {isLPPage ? 'Calculated nPT Amount' : 'Yield token'}
                 </span>
-                <div className='flex flex-row gap-2  bg-[#1a1f34] mr-2 p-3 rounded-md'>
-                  <div className='bg-[#1a1f34] text-right m-4' />
+                <div className='flex flex-row gap-2  bg-[#1a1f34] mr-2 rounded-md text-right justify-center'>
+                  <div className='bg-[#1a1f34] m-4 justify-center'>
+                    <span className=''>
+                      {isLPPage ? expectedNptAmount : expectedYieldToken}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { ERC20 } from '../../abi/ERC20';
 import { ERC20__factory } from '../../abi/factories';
+import { BaseAdapter__factory } from '../../abi/factories/BaseAdapter__factory';
 import { NapierPoolFactory__factory } from '../../abi/factories/NapierPoolFactory__factory';
 import { NapierPool__factory } from '../../abi/factories/NapierPool__factory';
 import { Tranche__factory } from '../../abi/factories/Tranche.sol';
@@ -46,7 +47,7 @@ export async function getERC20Instance(
 }
 
 
-export async function calculateAmount(underlyingInputAmount: number, yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum) {
+export async function calculateAmount(underlyingInputAmount: number, yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum, setAmountIn: (pAmount: number, yAmount: number) => void) {
   await window.ethereum.request({ method: 'eth_requestAccounts' });
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
@@ -61,7 +62,7 @@ export async function calculateAmount(underlyingInputAmount: number, yieldSymbol
   //   }
   // }
 
-  const tAmount = underlyingInputAmount;
+  const tAmount = ethers.BigNumber.from(underlyingInputAmount);
 
   // call tranche (npt)
   const ONE = ethers.BigNumber.from(10).pow(18)
@@ -73,10 +74,20 @@ export async function calculateAmount(underlyingInputAmount: number, yieldSymbol
       ptContractAddress = aDAIPT;
     }
   }
-  // const trancheSeries = await tranche.getSeries(ptContractAddress);
+  const trancheSeries = await tranche.getSeries(ptContractAddress);
 
-  // console.log('trancheSeries', trancheSeries.adapter);
+  console.log('trancheSeries', );
+
+  const adapter = BaseAdapter__factory.connect(trancheSeries.adapter, signer);
+  const feePst = await adapter.getIssuanceFee();
+    const fee = ethers.BigNumber.from(tAmount).mul(feePst).div(ONE);
+  console.log('feePst', feePst)
+  const scale = await tranche.lscales(ptContractAddress, myAddress);
+  console.log('scale,', scale);
+  const mintAmount = (tAmount.add(-fee)).mul(scale).div(ONE);
+  console.log(mintAmount.toNumber());
   
+  setAmountIn(mintAmount.toNumber(), mintAmount.toNumber());;
   // const adapter = new Contract(tranche.getSeries(ptContractAddress).adapter, abi)
   // const feePst = adapter.getIssuanceFee();
   // const fee = tAmount.mul(feePst).div(ONE);
@@ -150,12 +161,23 @@ export async function mintPTAndLP(amount: number, yieldSymbol: YieldSymbolEnum, 
 
   const pool = await NapierPool__factory.connect(poolAddress, signer);
   const deadline = Math.floor(Date.now() / 1000) + 10 * 60; // now + 10 mins
+
+  console.log(
+    ptContractAddress,
+    myAddress,
+    ethers.BigNumber.from(amount),
+    ethers.BigNumber.from(0),
+    ethers.BigNumber.from(deadline)
+  )
+  // const [res1, res2] = await pool.getReserves();
+  // console.log(res1.toString(), res2.toString())
   const issued = await pool.addLiquidityFromUnderlying(
     ptContractAddress,
     myAddress,
     ethers.BigNumber.from(amount),
-    0,
-    ethers.BigNumber.from(deadline)
+    ethers.BigNumber.from(0),
+    ethers.BigNumber.from(deadline),
+    {gasLimit: 5000000}
   )
 
 }
@@ -176,8 +198,31 @@ export async function approveTargetTokenToPool(yieldSymbol: YieldSymbolEnum, yie
   const poolFactory = NapierPoolFactory__factory.connect(addresses.NapierPoolFactory, signer);
   const [ poolAddress ] = await poolFactory.getPools();
 
-  const dai = ERC20__factory.connect(addresses.DAI, signer);
+  const dai = ERC20__factory.connect(targetAddress, signer);
   const approveMsg = await dai.approve(poolAddress, ethers.constants.MaxUint256);
 }
 
-// export async function calculateAmountIn(aount: number, yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum)m
+export async function calculateAmountIn(amount: number, yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum, setAmountIn: (uAmount: number, nptAmount: number) => void) {
+  console.log('calculateAmountIn', amount, yieldSource, yieldSymbol)
+  await window.ethereum.request({ method: 'eth_requestAccounts' });
+  const provider = new ethers.providers.Web3Provider(window.ethereum);
+  const signer = provider.getSigner();
+  const chainId = await signer.getChainId();
+  const myAddress = await signer.getAddress();
+  const addresses = getAddressByChainId(chainId);
+  const tranche = Tranche__factory.connect(addresses.Tranche, signer);
+
+  const [cDAIPT,  yDAIPT, aDAIPT, eDAIPT] = await tranche.getZeros();
+  let ptContractAddress = "";
+  if (yieldSymbol === YieldSymbolEnum.DAI) {
+    if (yieldSource === YieldSourceEnum.Aave) {
+      ptContractAddress = aDAIPT;
+    }
+  }
+
+  const poolFactory = NapierPoolFactory__factory.connect(addresses.NapierPoolFactory, signer);
+  const [ poolAddress ] = await poolFactory.getPools();
+  const pool = await NapierPool__factory.connect(poolAddress, signer);
+  const [uAmountIn, nptAmount] = await pool.getAmountIn(ptContractAddress, myAddress, amount);
+  setAmountIn(uAmountIn.toNumber(), nptAmount.toNumber());
+}

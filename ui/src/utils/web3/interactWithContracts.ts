@@ -40,9 +40,9 @@ export async function getERC20Instance(
   if (yieldSymbol === YieldSymbolEnum.DAI) {
     contractAddress = addresses.DAI;
   }
-  
+
   const dai = ERC20__factory.connect(contractAddress, provider);
-  
+
   return dai;
 }
 
@@ -67,7 +67,7 @@ export async function calculateAmount(underlyingInputAmount: number, yieldSymbol
   // call tranche (npt)
   const ONE = ethers.BigNumber.from(10).pow(18)
   const tranche = await Tranche__factory.connect(addresses.Tranche, signer);
-  const [cDAIPT,  yDAIPT, aDAIPT, eDAIPT] = await tranche.getZeros();
+  const [cDAIPT, yDAIPT, aDAIPT, eDAIPT] = await tranche.getZeros();
   let ptContractAddress = "";
   if (yieldSymbol === YieldSymbolEnum.DAI) {
     if (yieldSource === YieldSourceEnum.Aave) {
@@ -76,17 +76,18 @@ export async function calculateAmount(underlyingInputAmount: number, yieldSymbol
   }
   const trancheSeries = await tranche.getSeries(ptContractAddress);
 
-  console.log('trancheSeries', );
+  console.log('trancheSeries',);
 
   const adapter = BaseAdapter__factory.connect(trancheSeries.adapter, signer);
   const feePst = await adapter.getIssuanceFee();
-    const fee = ethers.BigNumber.from(tAmount).mul(feePst).div(ONE);
+  const fee = ethers.BigNumber.from(tAmount).mul(feePst).div(ONE);
   console.log('feePst', feePst)
-  const scale = await tranche.lscales(ptContractAddress, myAddress);
+  const lscale = await tranche.lscales(ptContractAddress, myAddress);
+  const scale = lscale.isZero() ? await adapter.scaleStored() : lscale;
   console.log('scale,', scale);
   const mintAmount = (tAmount.add(-fee)).mul(scale).div(ONE);
   console.log(mintAmount.toString());
-  
+
   setAmountIn(mintAmount.toString(), mintAmount.toString());;
   // const adapter = new Contract(tranche.getSeries(ptContractAddress).adapter, abi)
   // const feePst = adapter.getIssuanceFee();
@@ -94,9 +95,6 @@ export async function calculateAmount(underlyingInputAmount: number, yieldSymbol
   // let _scale = tranche.lscales(
   // pt, <user address>
   // )
-  // if (_scale.isZero()) {
-  // _scale = adapter.scaleStored();
-  // }
   // // pt amount and yt amount are the same
   // const mintAmount = (tAmount - fee).mul(_scale).div(ONE);
 }
@@ -128,7 +126,7 @@ export async function mintPT(amount: number, yieldSymbol: YieldSymbolEnum, yield
 
   const tranche = Tranche__factory.connect(addresses.Tranche, signer);
 
-  const [cDAIPT,  yDAIPT, aDAIPT, eDAIPT] = await tranche.getZeros();
+  const [cDAIPT, yDAIPT, aDAIPT, eDAIPT] = await tranche.getZeros();
   let ptContractAddress = "";
   if (yieldSymbol === YieldSymbolEnum.DAI) {
     if (yieldSource === YieldSourceEnum.Aave) {
@@ -148,7 +146,7 @@ export async function mintPTAndLP(amount: number, yieldSymbol: YieldSymbolEnum, 
   const addresses = getAddressByChainId(chainId);
   const tranche = Tranche__factory.connect(addresses.Tranche, signer);
 
-  const [cDAIPT,  yDAIPT, aDAIPT, eDAIPT] = await tranche.getZeros();
+  const [cDAIPT, yDAIPT, aDAIPT, eDAIPT] = await tranche.getZeros();
   let ptContractAddress = "";
   if (yieldSymbol === YieldSymbolEnum.DAI) {
     if (yieldSource === YieldSourceEnum.Aave) {
@@ -157,7 +155,7 @@ export async function mintPTAndLP(amount: number, yieldSymbol: YieldSymbolEnum, 
   }
 
   const poolFactory = NapierPoolFactory__factory.connect(addresses.NapierPoolFactory, signer);
-  const [ poolAddress ] = await poolFactory.getPools();
+  const [poolAddress] = await poolFactory.getPools();
 
   const pool = await NapierPool__factory.connect(poolAddress, signer);
   const deadline = Math.floor(Date.now() / 1000) + 10 * 60; // now + 10 mins
@@ -194,7 +192,7 @@ export async function approveTargetTokenToPool(yieldSymbol: YieldSymbolEnum, yie
   }
 
   const poolFactory = NapierPoolFactory__factory.connect(addresses.NapierPoolFactory, signer);
-  const [ poolAddress ] = await poolFactory.getPools();
+  const [poolAddress] = await poolFactory.getPools();
 
   const dai = ERC20__factory.connect(targetAddress, signer);
   const approveMsg = await dai.approve(poolAddress, ethers.constants.MaxUint256);
@@ -210,7 +208,7 @@ export async function calculateAmountIn(amount: number, yieldSymbol: YieldSymbol
   const addresses = getAddressByChainId(chainId);
   const tranche = Tranche__factory.connect(addresses.Tranche, signer);
 
-  const [cDAIPT,  yDAIPT, aDAIPT, eDAIPT] = await tranche.getZeros();
+  const [cDAIPT, yDAIPT, aDAIPT, eDAIPT] = await tranche.getZeros();
   let ptContractAddress = "";
   if (yieldSymbol === YieldSymbolEnum.DAI) {
     if (yieldSource === YieldSourceEnum.Aave) {
@@ -219,7 +217,7 @@ export async function calculateAmountIn(amount: number, yieldSymbol: YieldSymbol
   }
 
   const poolFactory = NapierPoolFactory__factory.connect(addresses.NapierPoolFactory, signer);
-  const [ poolAddress ] = await poolFactory.getPools();
+  const [poolAddress] = await poolFactory.getPools();
   const pool = await NapierPool__factory.connect(poolAddress, signer);
   const [uAmountIn, nptAmount] = await pool.getAmountIn(ptContractAddress, myAddress, ethers.utils.parseEther(String(amount)));
   setAmountIn(ethers.utils.formatEther(uAmountIn), ethers.utils.formatEther(nptAmount.toString()));

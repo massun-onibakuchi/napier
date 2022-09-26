@@ -82,7 +82,8 @@ export async function calculateAmount(underlyingInputAmount: number, yieldSymbol
   const feePst = await adapter.getIssuanceFee();
     const fee = ethers.BigNumber.from(tAmount).mul(feePst).div(ONE);
   console.log('feePst', feePst)
-  const scale = await tranche.lscales(ptContractAddress, myAddress);
+  const lscale = await tranche.lscales(ptContractAddress, myAddress);
+  const scale = lscale.isZero() ? await adapter.scaleStored() : lscale;
   console.log('scale,', scale);
   const mintAmount = (tAmount.add(-fee)).mul(scale).div(ONE);
   console.log(mintAmount.toNumber());

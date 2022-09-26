@@ -126,25 +126,25 @@ export function YieldPosition({
       <div className='flex pl-12 bg-[#020927] text-white items-center py-8 '>
         {source === YieldSourceEnum.Aave && (
           <div className='w-1/4 text-lg flex'>
-            <img src='./adai.png' alt='aDAI' width='50' />
+            <img className='pr-2' src='./adai.png' alt='aDAI' width='58' />
             aDAI
           </div>
         )}
         {source === YieldSourceEnum.Compound && (
           <div className='w-1/4 text-lg flex'>
-            <img src='./cdai.jpeg' alt='cDAI' width='28' />
+            <img className='pr-2' src='./cdai.png' alt='cDAI' width='58' />
             cDAI
           </div>
         )}
         {source === YieldSourceEnum.Yearn && (
           <div className='w-1/4 text-lg flex'>
-            <img src='./ydai.jpeg' alt='cDAI' width='28' />
+            <img className='pr-2' src='./ydai.png' alt='cDAI' width='58' />
             yDAI
           </div>
         )}
         {source === YieldSourceEnum.Euler && (
           <div className='w-1/4 text-lg flex'>
-            <img src='./edai.jpeg' alt='eDAI' width='28' />
+            <img className='pr-2' src='./edai.png' alt='eDAI' width='58' />
             eDAI
           </div>
         )}

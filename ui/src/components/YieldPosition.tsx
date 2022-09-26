@@ -39,11 +39,11 @@ export function YieldPosition({
   const [underlyingSymbol, setUnderlyingSymbol] = useState<string>('');
   const [underlyingInputAmount, setUnderlyingInputAmount] = useState<number>(0);
   const [underlyingAmountRequiredForLP, setUnderlyingAmountRequiredForLP] =
-    useState<number>(0);
-  const [expectedNptAmount, setExpectedNptAmount] = useState<number>(0);
+    useState<string>('');
+  const [expectedNptAmount, setExpectedNptAmount] = useState<string>('');
   const [expectedPrincipalToken, setExpectedPrincipalToken] =
-    useState<number>(0);
-  const [expectedYieldToken, setExpectedYieldToken] = useState<number>(0);
+    useState<string>('');
+  const [expectedYieldToken, setExpectedYieldToken] = useState<string>('');
 
   // TODO
   const toFixed = 0;
@@ -75,13 +75,13 @@ export function YieldPosition({
     }
     setUnderlyingInputAmount(input);
     if (isLPPage) {
-      const setAmountIn = (uAmount: number, nptAmount: number) => {
+      const setAmountIn = (uAmount: string, nptAmount: string) => {
         setUnderlyingAmountRequiredForLP(uAmount);
         setExpectedNptAmount(nptAmount);
       };
       calculateAmountIn(input, underlyingSymbolEnum, source, setAmountIn);
     } else {
-      const setAmountIn = (pAmount: number, yAmount: number) => {
+      const setAmountIn = (pAmount: string, yAmount: string) => {
         setExpectedPrincipalToken(pAmount);
         setExpectedYieldToken(yAmount);
       };

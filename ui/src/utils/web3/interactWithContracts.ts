@@ -47,7 +47,7 @@ export async function getERC20Instance(
 }
 
 
-export async function calculateAmount(underlyingInputAmount: number, yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum, setAmountIn: (pAmount: number, yAmount: number) => void) {
+export async function calculateAmount(underlyingInputAmount: number, yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum, setAmountIn: (pAmount: string, yAmount: string) => void) {
   await window.ethereum.request({ method: 'eth_requestAccounts' });
   const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = provider.getSigner();
@@ -85,9 +85,9 @@ export async function calculateAmount(underlyingInputAmount: number, yieldSymbol
   const scale = await tranche.lscales(ptContractAddress, myAddress);
   console.log('scale,', scale);
   const mintAmount = (tAmount.add(-fee)).mul(scale).div(ONE);
-  console.log(mintAmount.toNumber());
+  console.log(mintAmount.toString());
   
-  setAmountIn(mintAmount.toNumber(), mintAmount.toNumber());;
+  setAmountIn(mintAmount.toString(), mintAmount.toString());;
   // const adapter = new Contract(tranche.getSeries(ptContractAddress).adapter, abi)
   // const feePst = adapter.getIssuanceFee();
   // const fee = tAmount.mul(feePst).div(ONE);
@@ -200,7 +200,7 @@ export async function approveTargetTokenToPool(yieldSymbol: YieldSymbolEnum, yie
   const approveMsg = await dai.approve(poolAddress, ethers.constants.MaxUint256);
 }
 
-export async function calculateAmountIn(amount: number, yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum, setAmountIn: (uAmount: number, nptAmount: number) => void) {
+export async function calculateAmountIn(amount: number, yieldSymbol: YieldSymbolEnum, yieldSource: YieldSourceEnum, setAmountIn: (uAmount: string, nptAmount: string) => void) {
   console.log('calculateAmountIn', amount, yieldSource, yieldSymbol)
   await window.ethereum.request({ method: 'eth_requestAccounts' });
   const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -221,6 +221,6 @@ export async function calculateAmountIn(amount: number, yieldSymbol: YieldSymbol
   const poolFactory = NapierPoolFactory__factory.connect(addresses.NapierPoolFactory, signer);
   const [ poolAddress ] = await poolFactory.getPools();
   const pool = await NapierPool__factory.connect(poolAddress, signer);
-  const [uAmountIn, nptAmount] = await pool.getAmountIn(ptContractAddress, myAddress, amount);
-  setAmountIn(uAmountIn.toNumber(), nptAmount.toNumber());
+  const [uAmountIn, nptAmount] = await pool.getAmountIn(ptContractAddress, myAddress, ethers.utils.parseEther(String(amount)));
+  setAmountIn(ethers.utils.formatEther(uAmountIn), ethers.utils.formatEther(nptAmount.toString()));
 }

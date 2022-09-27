@@ -48,38 +48,28 @@ contract AaveV2Adapter is BaseAdapter {
     /// @inheritdoc BaseAdapter
     /// @dev no funds should be left in the contract after this call
     function wrapUnderlying(uint256 uBal) external override returns (uint256) {
-        require(uBal > 0, "AaveV2Adapter: uBal lower than 0");
+        require(uBal != 0, "AaveV2Adapter: uBal lower than 0");
 
         IERC20Metadata _underlying = IERC20Metadata(adapterParams.underlying);
-        IERC20Metadata _target = IERC20Metadata(adapterParams.target);
-
-        uint256 tBalBefore = _target.balanceOf(msg.sender);
 
         _underlying.safeTransferFrom(msg.sender, address(this), uBal);
-        pool.deposit(address(_underlying), uBal, msg.sender, 0);
+        pool.deposit(address(_underlying), uBal, address(this), 0);
 
-        uint256 tBalAfter = _target.balanceOf(msg.sender);
-        uint256 tBal = tBalAfter - tBalBefore;
-        require(tBal == uBal, "AaveV2Adapter: Balance Inequality");
-        return tBal;
+        IERC20Metadata(adapterParams.target).safeTransfer(msg.sender, uBal);
+        return uBal;
     }
 
     /// @inheritdoc BaseAdapter
     /// @dev no funds should be left in the contract after this call
     function unwrapTarget(uint256 tBal) external override returns (uint256) {
-        require(tBal > 0, "AaveV2Adapter: tBal lower than 0");
+        require(tBal != 0, "AaveV2Adapter: tBal lower than 0");
 
-        IERC20Metadata _underlying = IERC20Metadata(adapterParams.underlying);
         IERC20Metadata _target = IERC20Metadata(adapterParams.target);
 
-        uint256 uBalBefore = _underlying.balanceOf(msg.sender);
-
         _target.safeTransferFrom(msg.sender, address(this), tBal);
-        pool.withdraw(address(_target), tBal, msg.sender);
+        pool.withdraw(address(_target), tBal, address(this));
 
-        uint256 uBalAfter = _underlying.balanceOf(msg.sender);
-        uint256 uBal = uBalAfter - uBalBefore;
-        require(uBal == tBal, "AaveV2Adapter: Balance Inequality");
-        return uBal;
+        IERC20Metadata(adapterParams.underlying).safeTransfer(msg.sender, tBal);
+        return tBal;
     }
 }
